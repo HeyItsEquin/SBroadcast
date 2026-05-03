@@ -31,7 +31,7 @@ A lightweight .NET application that lets you send messages directly to your frie
 
 ## Usage
 
-1. **On your friends' machines:** Run `MessageBroadcast.Launcher`. This starts the overlay in the background and listens for incoming messages.
+1. **On your friends' machines:** Run `MessageBroadcast.Overlay`. This starts in the background and listens for incoming messages.
 2. **On your machine:** Run `MessageBroadcast.Sender`, select a friend's machine from the list, type a message, and send.
 
 ## Connectivity
