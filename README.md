@@ -30,9 +30,10 @@ A lightweight .NET application that lets you send messages directly to your frie
 ```
 
 ## Usage
-
-1. **On your friends' machines:** Run `MessageBroadcast.Overlay`. This starts in the background and listens for incoming messages.
-2. **On your machine:** Run `MessageBroadcast.Sender`, select a friend's machine from the list, type a message, and send.
+   1. **Run: `MessageBroadcast.Sender.exe`** - This starts both the sender application and the overlay in the background. 
+   2. Select a friend's machine from the list, write a message, and send.
+   > Note: If your friend's machine broadcasted multiple IPs, you can set your 'preferred' IP address for that machine.
+   > If your friend isn't receiving your message, or your message is being displayed on your own screen, this can probably help.
 
 ## Connectivity
 
