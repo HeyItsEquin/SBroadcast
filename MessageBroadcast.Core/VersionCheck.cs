@@ -31,6 +31,7 @@ namespace MessageBroadcast.Core
 
             var config = ConfigStore.Instance.GetAppConfig();
 
+            // If latest version was skipped, just say there's no updates
             if (latest == config.SkipVersion) return null;
             if (latest <= current) return null;
 

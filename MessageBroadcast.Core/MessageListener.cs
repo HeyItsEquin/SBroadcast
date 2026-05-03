@@ -41,11 +41,11 @@ namespace MessageBroadcast.Core
                 try
                 {
                     var client = await _listener!.AcceptTcpClientAsync(ct);
-                    Logger.Log($"Incoming connection from {client.Client.RemoteEndPoint}");
+                    Logger.Log($"[MB] Incoming connection from {client.Client.RemoteEndPoint}");
                     Task.Run(() => HandleClientAsync(client, ct));
                 }
                 catch (OperationCanceledException) { break; }
-                catch (Exception ex) { Logger.Log($"Accept error: {ex.Message}"); }
+                catch (Exception ex) { Logger.Log($"[MB] Accept error: {ex.Message}"); }
             }
         }
 
@@ -75,7 +75,7 @@ namespace MessageBroadcast.Core
             }
             catch (Exception ex)
             {
-                Logger.Log($"Handle client error: {ex.Message}");
+                Logger.Log($"[MB] Handle client error: {ex.Message}");
             }
         }
 

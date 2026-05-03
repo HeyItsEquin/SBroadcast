@@ -23,6 +23,7 @@ namespace MessageBroadcast.Sender
 
                     if (result == UpdatePromptResult.SkipVersion)
                     {
+                        Logger.Log($"[SND] Version {update.NewVersion.ToString(3)} skipped");
                         ConfigStore.Instance.UpdateAppConfig(nameof(AppConfig.SkipVersion), update.NewVersion);
                     }
                     else if (result == UpdatePromptResult.Accept)
@@ -35,9 +36,9 @@ namespace MessageBroadcast.Sender
             DispatcherUnhandledException += (s, ex) =>
             {
                 var inner = ex.Exception.InnerException;
-                Logger.Log($"Unhandled Exception: {ex.Exception.GetType()} - {ex.Exception.Message}");
+                Logger.Log($"[SND] Unhandled Exception: {ex.Exception.GetType()} - {ex.Exception.Message}");
                 if (inner != null)
-                    Logger.Log($"Inner Exception: {inner.GetType()} - {inner.Message}");
+                    Logger.Log($"[SND] Inner Exception: {inner.GetType()} - {inner.Message}");
                 ex.Handled = true;
                 Application.Current.Shutdown();
             };
@@ -55,15 +56,23 @@ namespace MessageBroadcast.Sender
 
         private void LaunchUpdater(VersionCheck.UpdateInfo update)
         {
-            Process.Start(new ProcessStartInfo
+            try
             {
-                FileName = Paths.UpdaterPath,
-                Arguments = $"{update.DownloadUrl} {Environment.ProcessId}",
-                UseShellExecute = true
-            });
-
-            Application.Current.Shutdown();
-            return;
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = Paths.UpdaterPath,
+                    Arguments = $"{update.DownloadUrl} {Environment.ProcessId}",
+                    UseShellExecute = false // Sender already launches as admin, inherit token
+                });
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"[SND] Failed to launch Updater: {ex.GetType().Name} - {ex.Message}");
+            }
+            finally
+            {
+                Application.Current.Shutdown();
+            }
         }
 
         private void EnsureFirewallRule()
@@ -81,22 +90,30 @@ namespace MessageBroadcast.Sender
                 if (File.Exists(overlayExe))
                     RunNetsh($"advfirewall firewall add rule name=\"{ruleName} Overlay\" dir=in action=allow program=\"{overlayExe}\"");
 
-                Logger.Log("[MB] Firewall rules added");
+                Logger.Log("[SND] Firewall rules added");
             }
         }
 
         private string RunNetsh(string args)
         {
-            var process = Process.Start(new ProcessStartInfo
+            try
             {
-                FileName = "netsh",
-                Arguments = args,
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            })!;
+                var process = Process.Start(new ProcessStartInfo
+                {
+                    FileName = "netsh",
+                    Arguments = args,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                })!;
 
-            return process.StandardOutput.ReadToEnd();
+                return process.StandardOutput.ReadToEnd();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"[SND] Failed to launch Netsh: {ex.Message}");
+            }
+            return string.Empty;
         }
     }
 }

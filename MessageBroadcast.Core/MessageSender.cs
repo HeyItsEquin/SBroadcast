@@ -17,7 +17,7 @@ namespace MessageBroadcast.Core
                 var connectTask = client.ConnectAsync(target.IpAddress, target.Port);
                 if (await Task.WhenAny(connectTask, Task.Delay(TimeoutMs)) != connectTask)
                 {
-                    Logger.Log($"Connection to {target.Name} timed out");
+                    Logger.Log($"[MB] Connection to {target.Name} timed out");
                     return false;
                 }
 
@@ -34,7 +34,7 @@ namespace MessageBroadcast.Core
             }
             catch (Exception ex)
             {
-                Logger.Log($"Send error: {ex.Message}");
+                Logger.Log($"[MB] Send error: {ex.Message}");
                 return false;
             }
         }

@@ -104,7 +104,7 @@ namespace MessageBroadcast.Sender
 
                 if (existing.Length == 0)
                 {
-                    Logger.Log("Overlay process not present, starting...");
+                    Logger.Log("[SND] Overlay process not present, starting...");
 
                     var overlayPath = Path.Combine(
                         AppDomain.CurrentDomain.BaseDirectory,
@@ -118,22 +118,22 @@ namespace MessageBroadcast.Sender
                             UseShellExecute = false
                         });
 
-                        Logger.Log("Started overlay process from Sender");
+                        Logger.Log("[SND] Started overlay process from Sender");
                     }
                     else
                     {
-                        MessageBox.Show("Could not find MessageBroadcast.Overlay.exe. " +
+                        MessageBox.Show("[SND] Could not find MessageBroadcast.Overlay.exe. " +
                             "Please make sure it is in the same folder as the Sender.");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logger.Log($"[MB] Failed to start overlay process: {ex.GetType().Name} - {ex.Message}");
+                Logger.Log($"[SND] Failed to start overlay process: {ex.GetType().Name} - {ex.Message}");
                 
                 var inner = ex.InnerException;
                 if (inner != null)
-                    Logger.Log($"[MB] Inner Exception: {inner.GetType().Name} - {ex.Message}");
+                    Logger.Log($"[SND] Inner Exception: {inner.GetType().Name} - {ex.Message}");
 
                 MessageBox.Show(
                     $"Failed to start overlay process, please check the logs.",
@@ -144,7 +144,7 @@ namespace MessageBroadcast.Sender
 
         private void OnDeviceDiscovered(DeviceInfo device)
         {
-            Logger.Log($"[MB] OnDeviceDiscovered: {device.Name} at {device.IpAddress}");
+            Logger.Log($"[SND] OnDeviceDiscovered: {device.Name} at {device.IpAddress}");
             Dispatcher.Invoke(() =>
             {
                 device.LoadConfigs();
@@ -225,7 +225,7 @@ namespace MessageBroadcast.Sender
                     }
 
                     DeviceList.SelectedItem = device;
-                    Logger.Log($"[MB] Manually set IP for {device.Name} to {capturedIp}");
+                    Logger.Log($"[SND] Manually set IP for {device.Name} to {capturedIp}");
                 };
 
                 PreferredIpMenuItem.Items.Add(ipItem);
@@ -309,7 +309,7 @@ namespace MessageBroadcast.Sender
                     {
                         _devices.Remove(device.Id);
                         _deviceList.Remove(device);
-                        Debug.WriteLine($"[MB] Removed stale device: {device.Name}");
+                        Debug.WriteLine($"[SND] Removed stale device: {device.Name}");
                     }
                 });
             }

@@ -24,7 +24,7 @@ namespace MessageBroadcast.Overlay
             base.OnStartup(e);
             ConfigStore.Instance.Load();
             Logger.Clear();
-            Logger.Log("Overlay starting up");
+            Logger.Log("[OVR] Overlay starting up");
 
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
@@ -54,7 +54,7 @@ namespace MessageBroadcast.Overlay
                 var config = ConfigStore.Instance.GetDeviceConfig(message.SenderId);
                 if(config.Blocked)
                 {
-                    Logger.Log($"[MB] Message received from blocked user ({message.DeviceName}) was not shown");
+                    Logger.Log($"[OVR] Message received from blocked user ({message.DeviceName}) was not shown");
                     return;
                 }
 
@@ -90,7 +90,7 @@ namespace MessageBroadcast.Overlay
             stopAudioItem.Click += (_, _) =>
             {
                 StopCurrentAudio();
-                Logger.Log("[MB] Audio stopped via tray menu");
+                Logger.Log("[OVR] Audio stopped via tray menu");
             };
 
             var startupItem = new ToolStripMenuItem("Start with Windows")
@@ -107,7 +107,7 @@ namespace MessageBroadcast.Overlay
             var openSenderItem = new ToolStripMenuItem("Open");
             openSenderItem.Click += (_, _) =>
             {
-                Logger.Log("[MB] Opening sender from tray");
+                Logger.Log("[OVR] Opening sender from tray");
                 var fullPath = Path.GetFullPath(Paths.SenderPath);
 
                 if (File.Exists(fullPath))
@@ -115,7 +115,7 @@ namespace MessageBroadcast.Overlay
                     var processName = "MessageBroadcast.Sender";
                     if (Process.GetProcessesByName(processName).Length > 0)
                     {
-                        Logger.Log("[MB] Sender already running");
+                        Logger.Log("[OVR] Sender already running");
                         return;
                     }
 
@@ -127,7 +127,7 @@ namespace MessageBroadcast.Overlay
                 }
                 else
                 {
-                    Logger.Log($"[MB] Sender not found at {fullPath}");
+                    Logger.Log($"[OVR] Sender not found at {fullPath}");
                     System.Windows.Forms.MessageBox.Show(
                         "Could not find MessageBroadcast.Sender.exe.",
                         "Error",
@@ -152,7 +152,7 @@ namespace MessageBroadcast.Overlay
 
         private void StopCurrentAudio()
         {
-            Logger.Log("[MB] StopCurrentAudio called");
+            Logger.Log("[OVR] StopCurrentAudio called");
             Dispatcher.Invoke(() =>
             {
                 _overlay?.StopAudio();
