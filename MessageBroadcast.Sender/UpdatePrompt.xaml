@@ -6,8 +6,7 @@
         xmlns:local="clr-namespace:MessageBroadcast.Sender"
         mc:Ignorable="d"
         Title="SBroadcast"
-        SizeToContent="Height"
-        Width="550">
+        SizeToContent="WidthAndHeight">
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
