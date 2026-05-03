@@ -1,0 +1,26 @@
+﻿<Window x:Class="MessageBroadcast.Overlay.OverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        AllowsTransparency="True"
+        Background="Transparent"
+        WindowStyle="None"
+        Topmost="True"
+        IsHitTestVisible="False"
+        WindowState="Maximized"
+        ShowInTaskbar="False">
+    <Grid>
+        <TextBlock x:Name="MessageText"
+                   Foreground="White"
+                   FontSize="68"
+                   FontWeight="Bold"
+                   FontFamily="Trebuchet MS"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   TextWrapping="Wrap"
+                   Visibility="Hidden">
+            <TextBlock.Effect>
+                <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="2"/>
+            </TextBlock.Effect>
+        </TextBlock>
+    </Grid>
+</Window>

@@ -1,0 +1,243 @@
+﻿<Window x:Class="MessageBroadcast.Sender.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MessageBroadcast.Sender"
+        mc:Ignorable="d"
+        Title="SBroadcast"
+        MinHeight="200"
+        Width="650"
+        SizeToContent="Height">
+    <Window.Resources>
+
+    </Window.Resources>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="200"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,8">
+            <TextBlock Text="Devices on network"
+                       FontWeight="Bold"
+                       VerticalAlignment="Center"/>
+            <Button Content="&#xE72C;"
+                    FontFamily="Segoe MDL2 Assets"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Width="24" Height="24"
+                    FontSize="14"
+                    Padding="0"
+                    Click="RefreshButton_Click"/>
+        </Grid>
+
+        <ListView Grid.Row="1"
+          x:Name="DeviceList"
+          Margin="0,0,0,8">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Name" Width="200">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="20"/>
+                                        <ColumnDefinition Width="auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0"
+                                               x:Name="StatusIcon"
+                                               FontFamily="Segoe MDL2 Assets"
+                                               Text="{Binding StatusIcon}"
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Left"
+                                               ToolTip="{Binding StatusToolTip}"/>
+                                    <TextBlock Grid.Column="1"
+                                               x:Name="NameText"
+                                               Text="{Binding PreferredName}"
+                                               VerticalAlignment="Center"/>
+                                    <TextBox Grid.Column="1"
+                                             x:Name="NameEdit"
+                                             Text="{Binding PreferredName, UpdateSourceTrigger=Explicit}"
+                                             Visibility="Collapsed"
+                                             VerticalContentAlignment="Center"
+                                             BorderThickness="1"
+                                             Padding="2,0,2,0"
+                                             LostFocus="NameEdit_LostFocus"
+                                             KeyDown="NameEdit_KeyDown"/>
+                                </Grid>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+
+                    <GridViewColumn Header="IP Address"
+                            DisplayMemberBinding="{Binding IpAddress}"
+                            Width="140"/>
+                    <GridViewColumn Header="Last Seen"
+                            DisplayMemberBinding="{Binding LastSeenDisplay}"
+                            Width="120"/>
+                </GridView>
+            </ListView.View>
+            <ListView.ContextMenu>
+                <ContextMenu Opened="DeviceContextMenu_Opened">
+                    <MenuItem Header="Preferred IP"
+                              x:Name="PreferredIpMenuItem"/>
+
+                    <MenuItem Header="Set Nickname"
+                              x:Name="SetNicknameMenuItem"
+                              Click="SetNicknameMenuItem_Click"/>
+
+                    <MenuItem Header="Favorite"
+                              x:Name="FavoriteDeviceMenuItem"
+                              Click="FavoriteDeviceMenuItem_Click"/>
+
+                    <MenuItem Header="Block"
+                              x:Name="BlockDeviceMenuItem"
+                              Click="BlockDeviceMenuItem_Click"/>
+                </ContextMenu>
+            </ListView.ContextMenu>
+        </ListView>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBox Grid.Column="0"
+                     x:Name="MessageInput"
+                     Padding="4"
+                     Margin="0,0,8,0"
+                     VerticalContentAlignment="Center"
+                     KeyDown="MessageInput_KeyDown"/>
+
+            <Button Grid.Column="1"
+                    Content="Send"
+                    Width="80"
+                    Click="SendButton_Click"
+                    VerticalAlignment="Stretch"/>
+        </Grid>
+
+        <Expander Grid.Row="3"
+                  Header="Options"
+                  Margin="0,8,0,0">
+            <StackPanel Margin="0,8,0,0">
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                        <TextBlock Text="Font Size"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Slider Grid.Column="0"
+                                    x:Name="FontSizeSlider"
+                                    Minimum="12" Maximum="196" Value="36"
+                                    TickFrequency="4" IsSnapToTickEnabled="True"/>
+                            <TextBlock Grid.Column="1" Text="{Binding ElementName=FontSizeSlider, Path=Value}"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="0,0,4,0">
+                        <TextBlock Text="Display Time (s)"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Slider Grid.Column="0"
+                                    x:Name="DisplayTimeSlider"
+                                    Minimum="1" Maximum="30" Value="5"
+                                    TickFrequency="1" IsSnapToTickEnabled="True"/>
+                            <TextBlock Grid.Column="1" Text="{Binding ElementName=DisplayTimeSlider, Path=Value}"/>
+                        </Grid>
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="2" Margin="4,0,0,0">
+                        <TextBlock Text="Position"/>
+                        <ComboBox x:Name="PositionCombo" SelectedIndex="4">
+                            <ComboBoxItem Content="Top Left"/>
+                            <ComboBoxItem Content="Top Center"/>
+                            <ComboBoxItem Content="Top Right"/>
+                            <ComboBoxItem Content="Middle Left"/>
+                            <ComboBoxItem Content="Center"/>
+                            <ComboBoxItem Content="Middle Right"/>
+                            <ComboBoxItem Content="Bottom Left"/>
+                            <ComboBoxItem Content="Bottom Center"/>
+                            <ComboBoxItem Content="Bottom Right"/>
+                        </ComboBox>
+                    </StackPanel>
+                </Grid>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                        <TextBlock Text="Font Family"/>
+                        <ComboBox x:Name="FontFamilyCombo" SelectedIndex="0">
+                            <ComboBoxItem Content="Segoe UI"/>
+                            <ComboBoxItem Content="Arial"/>
+                            <ComboBoxItem Content="Courier New"/>
+                            <ComboBoxItem Content="Georgia"/>
+                            <ComboBoxItem Content="Times New Roman"/>
+                            <ComboBoxItem Content="Verdana"/>
+                            <ComboBoxItem Content="Tahoma"/>
+                            <ComboBoxItem Content="Trebuchet MS"/>
+                            <ComboBoxItem Content="Impact"/>
+                            <ComboBoxItem Content="Comic Sans MS"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="4,0,0,0">
+                        <TextBlock Text="Font Color"/>
+                        <ComboBox x:Name="FontColorCombo" SelectedIndex="0">
+                            <ComboBoxItem Content="White" Tag="#FFFFFF"/>
+                            <ComboBoxItem Content="Yellow" Tag="#FFFF00"/>
+                            <ComboBoxItem Content="Red" Tag="#FF4444"/>
+                            <ComboBoxItem Content="Green" Tag="#44FF44"/>
+                            <ComboBoxItem Content="Cyan" Tag="#44FFFF"/>
+                            <ComboBoxItem Content="Orange" Tag="#FFA500"/>
+                            <ComboBoxItem Content="Pink" Tag="#FF69B4"/>
+                            <ComboBoxItem Content="Black" Tag="#000000"/>
+                        </ComboBox>
+                    </StackPanel>
+                </Grid>
+                <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0"
+                       x:Name="SoundFileLabel"
+                       Text="No sound selected"
+                       VerticalAlignment="Center"
+                       Foreground="Gray"/>
+                    <Button Grid.Column="1"
+                       Content="Browse"
+                       Width="70"
+                       Margin="8,0,4,0"
+                       Click="SoundBrowse_Click"/>
+                    <Button Grid.Column="2"
+                       Content="Clear"
+                       Width="70"
+                       Click="SoundClear_Click"/>
+                </Grid>
+            </StackPanel>
+        </Expander>
+    </Grid>
+</Window>
