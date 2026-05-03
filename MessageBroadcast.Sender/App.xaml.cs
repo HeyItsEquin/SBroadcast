@@ -19,12 +19,8 @@ namespace MessageBroadcast.Sender
                 var update = await VersionCheck.CheckForUpdates();
                 if (update != null)
                 {
-                    var result = MessageBox.Show(
-                        $"Version {update.TagName} is available. Update now?",
-                        "Update Available",
-                        MessageBoxButton.YesNo);
-
-                    if (result == MessageBoxResult.Yes)
+                    var result = ShowUpdateDialog(update) ?? false;
+                    if (result == true)
                     {
                         LaunchUpdater(update);
                     }
@@ -40,6 +36,15 @@ namespace MessageBroadcast.Sender
                 ex.Handled = true;
                 Application.Current.Shutdown();
             };
+        }
+
+        private bool? ShowUpdateDialog(VersionCheck.UpdateInfo update)
+        {
+            var window = new UpdatePrompt();
+            window.NewVersionLabel.Text = $"v{update.NewVersion}";
+            window.CurrentVersionLabel.Text = $"v{update.CurrentVersion}";
+
+            return window.ShowDialog();
         }
 
         private void LaunchUpdater(VersionCheck.UpdateInfo update)

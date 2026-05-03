@@ -1,0 +1,54 @@
+﻿<Window x:Class="MessageBroadcast.Sender.UpdatePrompt"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MessageBroadcast.Sender"
+        mc:Ignorable="d"
+        Title="SBroadcast"
+        SizeToContent="Height"
+        Width="550">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+               FontSize="18"
+               FontWeight="SemiBold"
+               Text="A new version of SBroadcast is available."/>
+
+        <TextBlock Grid.Row="1" Margin="0,4,0,0">
+            <Run Text="SBroadcast"/>
+            <Run x:Name="NewVersionLabel" Text="v1.1.2" FontWeight="SemiBold"/>
+            <Run Text="is available (you have "/>
+            <Run x:Name="CurrentVersionLabel" Text="v1.0.4"/>
+            <Run Text="). Would you like to download it?"/>
+        </TextBlock>
+
+        <Grid Grid.Row="2"
+              Margin="0,8,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0"
+                    x:Name="CancelUpdateButton"
+                    Content="Decline"
+                    Padding="4"
+                    Margin="0,0,5,0"
+                    Width="{Binding ElementName=AcceptUpdateButton, Path=ActualWidth}"
+                    Click="CancelUpdateButton_Click"/>
+
+            <Button Grid.Column="1"
+                    x:Name="AcceptUpdateButton"
+                    Content="Download/Install"
+                    Padding="4"
+                    Margin="5,0,0,0"
+                    Click="AcceptUpdateButton_Click"/>
+        </Grid>
+    </Grid>
+</Window>

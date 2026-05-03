@@ -11,7 +11,8 @@ namespace MessageBroadcast.Core
         private static readonly string GithubLatestReleaseUrl =
             "https://api.github.com/repos/HeyItsEquin/SBroadcast/releases/latest";
 
-        public record UpdateInfo(string TagName, string DownloadUrl);
+        public record UpdateInfo(string TagName, string DownloadUrl,
+                                 Version CurrentVersion, Version NewVersion);
 
         public static async Task<UpdateInfo?> CheckForUpdates()
         {
@@ -36,7 +37,7 @@ namespace MessageBroadcast.Core
             {
                 var url = asset.GetProperty("browser_download_url").GetString()!;
                 if (url.EndsWith(".zip"))
-                    return new UpdateInfo(tagName, url);
+                    return new UpdateInfo(tagName, url, current, latest);
             }
 
             return null;
