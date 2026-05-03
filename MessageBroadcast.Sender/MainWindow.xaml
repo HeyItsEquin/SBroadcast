@@ -126,7 +126,75 @@
                   Header="Message Options"
                   Margin="0,8,0,0">
             <StackPanel Margin="0,8,0,0">
+                <Grid Margin="0,12,0,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0"
+                       Text="Timing &amp; Position"
+                       FontSize="10"
+                       Foreground="Gray"
+                       VerticalAlignment="Center"
+                       Margin="0,0,8,0"/>
+                    <Separator Grid.Column="1" VerticalAlignment="Center"/>
+                </Grid>
+
                 <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                        <TextBlock Text="Display Time (s)"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Slider Grid.Column="0"
+                                    x:Name="DisplayTimeSlider"
+                                    Minimum="1" Maximum="30" Value="5"
+                                    TickFrequency="1" IsSnapToTickEnabled="True"/>
+                            <TextBlock Grid.Column="1" Text="{Binding ElementName=DisplayTimeSlider, Path=Value}"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="4,0,0,0">
+                        <TextBlock Text="Position"/>
+                        <ComboBox x:Name="PositionCombo" SelectedIndex="4">
+                            <ComboBoxItem Content="Top Left"/>
+                            <ComboBoxItem Content="Top Center"/>
+                            <ComboBoxItem Content="Top Right"/>
+                            <ComboBoxItem Content="Middle Left"/>
+                            <ComboBoxItem Content="Center"/>
+                            <ComboBoxItem Content="Middle Right"/>
+                            <ComboBoxItem Content="Bottom Left"/>
+                            <ComboBoxItem Content="Bottom Center"/>
+                            <ComboBoxItem Content="Bottom Right"/>
+                        </ComboBox>
+                    </StackPanel>
+                </Grid>
+
+                <Grid Margin="0,4,0,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0"
+                       Text="Typography"
+                       FontSize="10"
+                       Foreground="Gray"
+                       VerticalAlignment="Center"
+                       Margin="0,0,8,0"/>
+                    <Separator Grid.Column="1" VerticalAlignment="Center"/>
+                </Grid>
+
+                <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
@@ -149,43 +217,6 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Margin="0,0,4,0">
-                        <TextBlock Text="Display Time (s)"/>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Slider Grid.Column="0"
-                                    x:Name="DisplayTimeSlider"
-                                    Minimum="1" Maximum="30" Value="5"
-                                    TickFrequency="1" IsSnapToTickEnabled="True"/>
-                            <TextBlock Grid.Column="1" Text="{Binding ElementName=DisplayTimeSlider, Path=Value}"/>
-                        </Grid>
-                    </StackPanel>
-                    
-                    <StackPanel Grid.Column="2" Margin="4,0,0,0">
-                        <TextBlock Text="Position"/>
-                        <ComboBox x:Name="PositionCombo" SelectedIndex="4">
-                            <ComboBoxItem Content="Top Left"/>
-                            <ComboBoxItem Content="Top Center"/>
-                            <ComboBoxItem Content="Top Right"/>
-                            <ComboBoxItem Content="Middle Left"/>
-                            <ComboBoxItem Content="Center"/>
-                            <ComboBoxItem Content="Middle Right"/>
-                            <ComboBoxItem Content="Bottom Left"/>
-                            <ComboBoxItem Content="Bottom Center"/>
-                            <ComboBoxItem Content="Bottom Right"/>
-                        </ComboBox>
-                    </StackPanel>
-                </Grid>
-
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel Grid.Column="0" Margin="0,0,4,0">
                         <TextBlock Text="Font Family"/>
                         <ComboBox x:Name="FontFamilyCombo" SelectedIndex="0">
                             <ComboBoxItem Content="Segoe UI"/>
@@ -201,7 +232,7 @@
                         </ComboBox>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="1" Margin="4,0,0,0">
+                    <StackPanel Grid.Column="2" Margin="4,0,0,0">
                         <TextBlock Text="Font Color"/>
                         <ComboBox x:Name="FontColorCombo" SelectedIndex="0">
                             <ComboBoxItem Content="White" Tag="#FFFFFF"/>
@@ -215,27 +246,50 @@
                         </ComboBox>
                     </StackPanel>
                 </Grid>
-                <Grid Margin="0,8,0,0">
+
+                <Grid Margin="0,12,0,2">
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
                     <TextBlock Grid.Column="0"
-                       x:Name="SoundFileLabel"
-                       Text="No sound selected"
+                       Text="Media"
+                       FontSize="10"
+                       Foreground="Gray"
                        VerticalAlignment="Center"
-                       Foreground="Gray"/>
-                    <Button Grid.Column="1"
-                       Content="Browse"
-                       Width="70"
-                       Margin="8,0,4,0"
-                       Click="SoundBrowse_Click"/>
-                    <Button Grid.Column="2"
-                       Content="Clear"
-                       Width="70"
-                       Click="SoundClear_Click"/>
+                       Margin="0,0,8,0"/>
+                    <Separator Grid.Column="1" VerticalAlignment="Center"/>
+                </Grid>
+
+                <Grid Margin="0,0,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock x:Name="SoundFileLabel"
+                                   Text="No sound selected"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,0,4"
+                                   Foreground="Gray"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Button Grid.Column="0"
+                                    Content="Browse"
+                                    Margin="0,0,8,0"
+                                    Click="SoundBrowse_Click"/>
+                            <Button Grid.Column="1"
+                                    Content="Clear"
+                                    Click="SoundClear_Click"/>
+                        </Grid>
+                    </StackPanel>
                 </Grid>
             </StackPanel>
         </Expander>
