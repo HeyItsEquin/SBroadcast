@@ -73,8 +73,8 @@ namespace MessageBroadcast.Sender
         private void LoadAppConfig()
         {
             var config = ConfigStore.Instance.GetAppConfig();
-            FontSizeSlider.Value = config.DefaultFontSize;
-            DisplayTimeSlider.Value = config.DefaultDisplaySeconds;
+            FontSizeSlider.Value = (double)config.DefaultFontSize;
+            DisplayTimeSlider.Value = (double)config.DefaultDisplaySeconds;
             PositionCombo.SelectedIndex = (int)config.DefaultPosition;
             FontFamilyCombo.SelectedIndex = FindComboIndex(FontFamilyCombo, config.DefaultFontFamily);
             FontColorCombo.SelectedIndex = FindComboIndex(FontColorCombo, config.DefaultFontColor);

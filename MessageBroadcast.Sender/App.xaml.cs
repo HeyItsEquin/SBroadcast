@@ -33,7 +33,10 @@ namespace MessageBroadcast.Sender
 
             DispatcherUnhandledException += (s, ex) =>
             {
-                Logger.Log($"Unhandled Exception: {ex.Exception.GetType().ToString()} - {ex.Exception.Message}");
+                var inner = ex.Exception.InnerException;
+                Logger.Log($"Unhandled Exception: {ex.Exception.GetType()} - {ex.Exception.Message}");
+                if (inner != null)
+                    Logger.Log($"Inner Exception: {inner.GetType()} - {inner.Message}");
                 ex.Handled = true;
                 Application.Current.Shutdown();
             };
