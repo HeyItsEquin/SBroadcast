@@ -8,7 +8,6 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace MessageBroadcast.Sender
 {
@@ -98,30 +97,48 @@ namespace MessageBroadcast.Sender
 
         private void EnsureOverlayRunning()
         {
-            var overlayProcessName = "MessageBroadcast.Overlay";
-            var existing = Process.GetProcessesByName(overlayProcessName);
-
-            if(existing.Length == 0)
+            try
             {
-                var overlayPath = Path.Combine(
-                    AppDomain.CurrentDomain.BaseDirectory,
-                    "MessageBroadcast.Overlay.exe");
+                var overlayProcessName = "MessageBroadcast.Overlay";
+                var existing = Process.GetProcessesByName(overlayProcessName);
 
-                if (File.Exists(overlayPath))
+                if (existing.Length == 0)
                 {
-                    Process.Start(new ProcessStartInfo
+                    Logger.Log("Overlay process not present, starting...");
+
+                    var overlayPath = Path.Combine(
+                        AppDomain.CurrentDomain.BaseDirectory,
+                        "MessageBroadcast.Overlay.exe");
+
+                    if (File.Exists(overlayPath))
                     {
-                        FileName = overlayPath,
-                        UseShellExecute = true
-                    });
+                        Process.Start(new ProcessStartInfo
+                        {
+                            FileName = overlayPath,
+                            UseShellExecute = false
+                        });
 
-                    Logger.Log("Started overlay process from Sender");
+                        Logger.Log("Started overlay process from Sender");
+                    }
+                    else
+                    {
+                        MessageBox.Show("Could not find MessageBroadcast.Overlay.exe. " +
+                            "Please make sure it is in the same folder as the Sender.");
+                    }
                 }
-                else
-                {
-                    MessageBox.Show("Could not find MessageBroadcast.Overlay.exe. " +
-                        "Please make sure it is in the same folder as the Sender.");
-                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"[MB] Failed to start overlay process: {ex.GetType().Name} - {ex.Message}");
+                
+                var inner = ex.InnerException;
+                if (inner != null)
+                    Logger.Log($"[MB] Inner Exception: {inner.GetType().Name} - {ex.Message}");
+
+                MessageBox.Show(
+                    $"Failed to start overlay process, please check the logs.",
+                    "Unhandled exception",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
