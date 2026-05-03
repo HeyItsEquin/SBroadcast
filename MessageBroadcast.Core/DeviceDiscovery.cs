@@ -1,6 +1,4 @@
 ﻿using Makaretu.Dns;
-using MessageBroadcast.Core;
-using System.Diagnostics;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;

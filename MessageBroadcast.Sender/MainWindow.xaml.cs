@@ -31,15 +31,7 @@ namespace MessageBroadcast.Sender
         {
             InitializeComponent();
             LoadAppConfig();
-
-            if (File.Exists(Paths.IconPath))
-            {
-                using var stream = new FileStream(Paths.IconPath, FileMode.Open, FileAccess.Read);
-                var decoder = new IconBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
-                Icon = decoder.Frames
-                    .OrderByDescending(f => f.Width)
-                    .First();
-            }
+            Icon = IconLoader.LoadIcon() ?? Icon;
 
             EnsureOverlayRunning();
 
@@ -81,8 +73,8 @@ namespace MessageBroadcast.Sender
         private void LoadAppConfig()
         {
             var config = ConfigStore.Instance.GetAppConfig();
-            FontSizeSlider.Value = (double)config.DefaultFontSize;
-            DisplayTimeSlider.Value = (double)config.DefaultDisplaySeconds;
+            FontSizeSlider.Value = config.DefaultFontSize;
+            DisplayTimeSlider.Value = config.DefaultDisplaySeconds;
             PositionCombo.SelectedIndex = (int)config.DefaultPosition;
             FontFamilyCombo.SelectedIndex = FindComboIndex(FontFamilyCombo, config.DefaultFontFamily);
             FontColorCombo.SelectedIndex = FindComboIndex(FontColorCombo, config.DefaultFontColor);

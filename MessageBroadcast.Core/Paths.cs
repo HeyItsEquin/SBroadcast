@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 
 namespace MessageBroadcast.Core
 {
@@ -23,6 +19,10 @@ namespace MessageBroadcast.Core
         public static string OverlayPath => Path.Combine(
             AppDomain.CurrentDomain.BaseDirectory,
             "MessageBroadcast.Overlay.exe");
+
+        public static string UpdaterPath => Path.Combine(
+            AppDomain.CurrentDomain.BaseDirectory,
+            "MessageBroadcast.Updater.exe");
 
         public static string DeviceUuidPath => Path.Combine(AppData, "device.uuid");
         public static string PreferencesPath => Path.Combine(AppData, "preferences.json");

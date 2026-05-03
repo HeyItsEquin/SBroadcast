@@ -24,17 +24,7 @@ namespace MessageBroadcast.Overlay
         public OverlayWindow()
         {
             InitializeComponent();
-
-            // Turn icon into Bitmap because .NET doesn't like .ico files
-            if (File.Exists(Paths.IconPath))
-            {
-                using var stream = new FileStream(Paths.IconPath, FileMode.Open, FileAccess.Read);
-                var decoder = new IconBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
-                // Icon has multiple frames, use highest resolution
-                Icon = decoder.Frames
-                    .OrderByDescending(f => f.Width)
-                    .First();
-            }
+            Icon = IconLoader.LoadIcon() ?? Icon;
         }
 
         public async void ShowMessage(Message message)

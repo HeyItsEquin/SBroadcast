@@ -14,12 +14,42 @@ namespace MessageBroadcast.Sender
 
             EnsureFirewallRule();
 
+            Dispatcher.InvokeAsync(async () =>
+            {
+                var update = await VersionCheck.CheckForUpdates();
+                if (update != null)
+                {
+                    var result = MessageBox.Show(
+                        $"Version {update.TagName} is available. Update now?",
+                        "Update Available",
+                        MessageBoxButton.YesNo);
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        LaunchUpdater(update);
+                    }
+                }
+            });
+
             DispatcherUnhandledException += (s, ex) =>
             {
                 Logger.Log($"Unhandled Exception: {ex.Exception.GetType().ToString()} - {ex.Exception.Message}");
                 ex.Handled = true;
                 Application.Current.Shutdown();
             };
+        }
+
+        private void LaunchUpdater(VersionCheck.UpdateInfo update)
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = Paths.UpdaterPath,
+                Arguments = $"{update.DownloadUrl} {Environment.ProcessId}",
+                UseShellExecute = true
+            });
+
+            Application.Current.Shutdown();
+            return;
         }
 
         private void EnsureFirewallRule()
