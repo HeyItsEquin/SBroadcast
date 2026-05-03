@@ -1,13 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UseWPF>true</UseWPF>
-    <OutputPath>..\Release</OutputPath>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UseWPF>true</UseWPF>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+		<SelfContained>true</SelfContained>
+		<PublishSingleFile>true</PublishSingleFile>
+		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+		<OutputPath>..\$(Configuration)</OutputPath>
+		<Version>1.0.0</Version>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<DebugType>none</DebugType>
+		<DebugSymbols>false</DebugSymbols>
+	</PropertyGroup>
 
 	<PropertyGroup>
 		<ApplicationIcon>..\Assets\app.ico</ApplicationIcon>
@@ -15,29 +25,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <None Remove="Fonts\fa-solid-900.ttf" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<None Include="..\Assets\app.ico" Link="Assets\app.ico">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
-
+	
 	<ItemGroup>
-	  <PackageReference Include="WPF-UI" Version="4.2.1" />
+		<ProjectReference Include="..\MessageBroadcast.Core\MessageBroadcast.Core.csproj" />
 	</ItemGroup>
-	
-  <ItemGroup>
-    <ProjectReference Include="..\MessageBroadcast.Core\MessageBroadcast.Core.csproj" />
-  </ItemGroup>
-	
-  <ItemGroup>
-    <Folder Include="UI\" />
-  </ItemGroup>
-	
-  <ItemGroup>
-    <Resource Include="Fonts\fa-solid-900.ttf" />
-  </ItemGroup>
 
 </Project>

@@ -1,6 +1,5 @@
 ﻿using MessageBroadcast.Core;
 using Microsoft.Win32;
-using NAudio.Wave;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;

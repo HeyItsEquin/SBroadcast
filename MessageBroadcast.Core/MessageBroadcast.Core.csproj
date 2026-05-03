@@ -1,18 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+		<Version>1.0.0</Version>
+    </PropertyGroup>
 
-	<PropertyGroup>
-		<OutputPath>..\Release</OutputPath>
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<DebugType>none</DebugType>
+		<DebugSymbols>false</DebugSymbols>
 	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Makaretu.Dns.Multicast" Version="0.27.0" />
-    <PackageReference Include="NAudio" Version="2.3.0" />
-  </ItemGroup>
+	<PropertyGroup>
+		<OutputPath>..\$(Configuration)</OutputPath>
+	</PropertyGroup>
 
+    <ItemGroup>
+        <PackageReference Include="Makaretu.Dns.Multicast" Version="0.27.0" />
+        <PackageReference Include="NAudio" Version="2.3.0" />
+    </ItemGroup>
 </Project>
