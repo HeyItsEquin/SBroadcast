@@ -13,6 +13,7 @@ namespace MessageBroadcast.Updater
     public partial class MainWindow : Window
     {
         private readonly string UpdateZipPath = Path.Combine(Path.GetTempPath(), "SBroadcast-update.zip");
+        private readonly string TempExtractPath = Path.Combine(Path.GetTempPath(), "SBroadcast-update");
 
         public MainWindow()
         {
@@ -33,10 +34,8 @@ namespace MessageBroadcast.Updater
             {
                 await CloseProcesses(senderPid);
                 await DownloadUpdateFiles(downloadUrl);
-                await InstallUpdateFiles(appDir);
-
-                Process.Start(Path.Combine(appDir, "MessageBroadcast.Sender.exe"));
-                Application.Current.Shutdown();
+                var extractRoot = await ExtractUpdateFiles();
+                CopyUpdateFiles(extractRoot, appDir);
             } 
             catch (Exception ex)
             {
@@ -104,39 +103,64 @@ namespace MessageBroadcast.Updater
             }
         }
 
-        private async Task InstallUpdateFiles(string outputDir)
+        private async Task<string> ExtractUpdateFiles()
         {
             StatusLabel.Text = "Extracting files...";
-            var tempExtract = Path.Combine(Path.GetTempPath(), "SBroadcast-update");
-
             UpdateProgressBar(3.8, durationSeconds: 2.0);
 
             await Task.Run(() =>
             {
-                if (Directory.Exists(tempExtract))
-                    Directory.Delete(tempExtract, recursive: true);
+                if (Directory.Exists(TempExtractPath))
+                    Directory.Delete(TempExtractPath, recursive: true);
 
-                ZipFile.ExtractToDirectory(UpdateZipPath, tempExtract);
-
-                UpdateStatusLabelAsync("Installing...");
-                UpdateProgressBarAsync(3.9, durationSeconds: 0.1);
-
-                foreach (var file in Directory.GetFiles(tempExtract))
-                {
-                    var fileName = Path.GetFileName(file);
-                    if (fileName == "MessageBroadcast.Updater.exe") continue;
-
-                    File.Copy(file, Path.Combine(outputDir, fileName), overwrite: true);
-                }
-
-                UpdateStatusLabelAsync("Cleaning up...");
-                UpdateProgressBarAsync(4.9, durationSeconds: 0.5);
-
-                Directory.Delete(tempExtract, recursive: true);
+                ZipFile.ExtractToDirectory(UpdateZipPath, TempExtractPath);
             });
 
             File.Delete(UpdateZipPath);
+
+            var extractRoot = TempExtractPath;
+            var entries = Directory.GetFileSystemEntries(TempExtractPath);
+            if (entries.Length == 1 && Directory.Exists(entries[0]))
+                extractRoot = entries[0];
+
+            UpdateProgressBar(4);
+            return extractRoot;
+        }
+
+        // Create a batch script in app directory, hand off file copying to it
+        private void CopyUpdateFiles(string extractRoot, string appDir)
+        {
+            StatusLabel.Text = "Installing...";
             UpdateProgressBar(5);
+
+            var scriptPath = Path.Combine(appDir, "SBroadcast-update.bat");
+            var lines = new List<string>();
+
+            lines.Add("@echo off");
+            lines.Add("timeout /t 2 /nobreak > nul");
+
+            foreach (var file in Directory.GetFiles(extractRoot))
+            {
+                var fileName = Path.GetFileName(file);
+                lines.Add($"copy /y \"{file}\" \"{Path.Combine(appDir, fileName)}\"");
+            }
+
+            lines.Add($"rmdir /s /q \"{TempExtractPath}\"");
+            lines.Add($"start \"\" \"{Path.Combine(appDir, "MessageBroadcast.Sender.exe")}\"");
+            lines.Add($"del \"%~f0\"");
+
+            File.WriteAllLines(scriptPath, lines);
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "cmd.exe",
+                Arguments = $"/c \"{scriptPath}\"",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden
+            });
+
+            Application.Current.Shutdown();
         }
 
         private void UpdateStatusLabelAsync(string txt)

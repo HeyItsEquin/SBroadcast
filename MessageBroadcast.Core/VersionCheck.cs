@@ -2,6 +2,7 @@
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.IO;
 
 namespace MessageBroadcast.Core
 {
@@ -39,6 +40,14 @@ namespace MessageBroadcast.Core
             }
 
             return null;
+        }
+
+        // Updater creates a batch file to copy files over, remove it
+        public static void RemoveUpdateArtifacts()
+        {
+            var updaterPath = Path.Combine(AppContext.BaseDirectory, "SBroadcast-update.bat");
+            if (File.Exists(updaterPath))
+                File.Delete(updaterPath);
         }
     }
 }

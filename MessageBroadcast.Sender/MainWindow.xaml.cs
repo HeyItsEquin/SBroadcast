@@ -114,6 +114,8 @@ namespace MessageBroadcast.Sender
                         FileName = overlayPath,
                         UseShellExecute = true
                     });
+
+                    Logger.Log("Started overlay process from Sender");
                 }
                 else
                 {
