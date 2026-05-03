@@ -223,7 +223,7 @@ namespace MessageBroadcast.Sender
 
             if (target.Blocked)
             {
-                MessageBox.Show("You cannot send messages to a user whom you've blocked.");
+                MessageBox.Show("You are unable to send messages to a user whom you've blocked.");
                 return;
             }
 
