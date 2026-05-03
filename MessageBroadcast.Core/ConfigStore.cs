@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.IO;
+using System.Text.Json.Serialization;
 
 namespace MessageBroadcast.Core
 {
@@ -10,6 +11,9 @@ namespace MessageBroadcast.Core
         public string DefaultFontColor { get; set; } = "#FFFFFF";
         public int DefaultDisplaySeconds { get; set; } = 5;
         public MessagePosition DefaultPosition { get; set; } = MessagePosition.Center;
+
+        [JsonConverter(typeof(VersionConverter))]
+        public Version? SkipVersion { get; set; } = null;
     }
 
     public class DeviceConfig
@@ -181,5 +185,14 @@ namespace MessageBroadcast.Core
             prop.SetValue(config, value);
             SetAppConfig(config);
         }
+    }
+
+    public class VersionConverter : JsonConverter<Version>
+    {
+        public override Version? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            => Version.Parse(reader.GetString()!);
+
+        public override void Write(Utf8JsonWriter writer, Version value, JsonSerializerOptions options)
+            => writer.WriteStringValue(value.ToString());
     }
 }

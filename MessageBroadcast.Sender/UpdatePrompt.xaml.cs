@@ -1,21 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+﻿using System.Windows;
 
 namespace MessageBroadcast.Sender
 {
+    public enum UpdatePromptResult
+    {
+        SkipVersion,
+        Decline,
+        Accept
+    }
+
     public partial class UpdatePrompt : Window
     {
+        public UpdatePromptResult Result = UpdatePromptResult.Decline;
+
         public UpdatePrompt()
         {
             InitializeComponent();
@@ -23,13 +20,19 @@ namespace MessageBroadcast.Sender
 
         private void AcceptUpdateButton_Click(object sender, RoutedEventArgs e)
         {
-            DialogResult = true;
+            Result = UpdatePromptResult.Accept;
             Close();
         }
 
         private void CancelUpdateButton_Click(object sender, RoutedEventArgs e)
         {
-            DialogResult = false;
+            Result = UpdatePromptResult.Decline;
+            Close();
+        }
+
+        private void SkipVersionButton_Click(object sender, RoutedEventArgs e)
+        {
+            Result = UpdatePromptResult.SkipVersion;
             Close();
         }
     }

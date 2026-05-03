@@ -19,8 +19,13 @@ namespace MessageBroadcast.Sender
                 var update = await VersionCheck.CheckForUpdates();
                 if (update != null)
                 {
-                    var result = ShowUpdateDialog(update) ?? false;
-                    if (result == true)
+                    var result = ShowUpdateDialog(update);
+
+                    if (result == UpdatePromptResult.SkipVersion)
+                    {
+                        ConfigStore.Instance.UpdateAppConfig(nameof(AppConfig.SkipVersion), update.NewVersion);
+                    }
+                    else if (result == UpdatePromptResult.Accept)
                     {
                         LaunchUpdater(update);
                     }
@@ -38,13 +43,14 @@ namespace MessageBroadcast.Sender
             };
         }
 
-        private bool? ShowUpdateDialog(VersionCheck.UpdateInfo update)
+        private UpdatePromptResult ShowUpdateDialog(VersionCheck.UpdateInfo update)
         {
             var window = new UpdatePrompt();
-            window.NewVersionLabel.Text = $"v{update.NewVersion}";
-            window.CurrentVersionLabel.Text = $"v{update.CurrentVersion}";
+            window.NewVersionLabel.Text = $"v{update.NewVersion.ToString(3)}";
+            window.CurrentVersionLabel.Text = $"v{update.CurrentVersion.ToString(3)}";
 
-            return window.ShowDialog();
+            window.ShowDialog();
+            return window.Result;
         }
 
         private void LaunchUpdater(VersionCheck.UpdateInfo update)

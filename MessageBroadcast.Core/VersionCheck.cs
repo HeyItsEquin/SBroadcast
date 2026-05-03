@@ -29,6 +29,9 @@ namespace MessageBroadcast.Core
             var tagName = root.GetProperty("tag_name").GetString()!;
             var latest = Version.Parse(tagName.TrimStart('v'));
 
+            var config = ConfigStore.Instance.GetAppConfig();
+
+            if (latest == config.SkipVersion) return null;
             if (latest <= current) return null;
 
             // Find the release's download asset

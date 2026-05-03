@@ -20,22 +20,30 @@
                FontWeight="SemiBold"
                Text="A new version of SBroadcast is available."/>
 
-        <TextBlock Grid.Row="1" Margin="0,4,0,0">
+        <TextBlock Grid.Row="1" Margin="0,4,0,0" FontSize="13">
             <Run Text="SBroadcast"/>
             <Run x:Name="NewVersionLabel" Text="v1.1.2" FontWeight="SemiBold"/>
-            <Run Text="is available (you have "/>
-            <Run x:Name="CurrentVersionLabel" Text="v1.0.4"/>
-            <Run Text="). Would you like to download it?"/>
+            <Run Text="is available (you have"/>
+            <Run x:Name="CurrentVersionLabel" Text="v1.0.4"/><!--
+        --><Run Text="). Would you like to download it?"/>
         </TextBlock>
 
         <Grid Grid.Row="2"
               Margin="0,8,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="auto"/>
                 <ColumnDefinition Width="auto"/>
             </Grid.ColumnDefinitions>
 
             <Button Grid.Column="0"
+                    x:Name="SkipVersionButton"
+                    Content="Skip this version"
+                    Padding="4"
+                    Click="SkipVersionButton_Click"/>
+
+            <Button Grid.Column="2"
                     x:Name="CancelUpdateButton"
                     Content="Decline"
                     Padding="4"
@@ -43,7 +51,7 @@
                     Width="{Binding ElementName=AcceptUpdateButton, Path=ActualWidth}"
                     Click="CancelUpdateButton_Click"/>
 
-            <Button Grid.Column="1"
+            <Button Grid.Column="3"
                     x:Name="AcceptUpdateButton"
                     Content="Download/Install"
                     Padding="4"
