@@ -25,6 +25,7 @@ namespace MessageBroadcast.Updater
         {
             base.OnContentRendered(e);
 
+            // First arg is new ver. download link, second arg is pid of sender proc
             var args = Environment.GetCommandLineArgs();
             var downloadUrl = args[1];
             var senderPid = int.Parse(args[2]);
@@ -48,6 +49,7 @@ namespace MessageBroadcast.Updater
             }
         }
 
+        // Close sender and overlay processes
         private async Task CloseProcesses(int senderPid)
         {
             StatusLabel.Text = "Waiting for Sender to close...";
@@ -69,7 +71,7 @@ namespace MessageBroadcast.Updater
             UpdateProgressBar(1, durationSeconds: 0.1);
         }
 
-        // Read file-by-file so that the progress bar can be smooth
+        // Download release files from Github
         private async Task DownloadUpdateFiles(string downloadUrl)
         {
             StatusLabel.Text = "Downloading update files...";
@@ -90,6 +92,7 @@ namespace MessageBroadcast.Updater
             long bytesRead = 0;
             int read;
 
+            // Read file-by-file so that the progress bar can be smooth
             while ((read = await stream.ReadAsync(buffer)) > 0)
             {
                 await fileStream.WriteAsync(buffer.AsMemory(0, read));
@@ -103,11 +106,13 @@ namespace MessageBroadcast.Updater
             }
         }
 
+        // Extract the update zip downloaded in the previous zip
         private async Task<string> ExtractUpdateFiles()
         {
             StatusLabel.Text = "Extracting files...";
             UpdateProgressBar(3.8, durationSeconds: 2.0);
 
+            // Extract zip file
             await Task.Run(() =>
             {
                 if (Directory.Exists(TempExtractPath))
@@ -118,6 +123,8 @@ namespace MessageBroadcast.Updater
 
             File.Delete(UpdateZipPath);
 
+            // Go 1 entry deep into the extracted zip
+            // Release archives follow this format: SBroadcast-vX.X.X\SBroadcast-vX.X.X
             var extractRoot = TempExtractPath;
             var entries = Directory.GetFileSystemEntries(TempExtractPath);
             if (entries.Length == 1 && Directory.Exists(entries[0]))
@@ -137,7 +144,7 @@ namespace MessageBroadcast.Updater
             var lines = new List<string>();
 
             lines.Add("@echo off");
-            lines.Add("timeout /t 2 /nobreak > nul");
+            lines.Add("timeout /t 2 /nobreak > nul"); // Wait a bit to allow file locks to release
 
             foreach (var file in Directory.GetFiles(extractRoot))
             {
@@ -149,8 +156,10 @@ namespace MessageBroadcast.Updater
             lines.Add($"start \"\" \"{Path.Combine(appDir, "MessageBroadcast.Sender.exe")}\"");
             lines.Add($"del \"%~f0\"");
 
+            // Write script to app install directory, anything else tends to trip MS Defender
             File.WriteAllLines(scriptPath, lines);
 
+            // Start script
             Process.Start(new ProcessStartInfo
             {
                 FileName = "cmd.exe",
@@ -163,11 +172,6 @@ namespace MessageBroadcast.Updater
             Application.Current.Shutdown();
         }
 
-        private void UpdateStatusLabelAsync(string txt)
-        {
-            Dispatcher.Invoke(() => { StatusLabel.Text = txt; });
-        }
-
         // 'Fake' progress bar
         private void UpdateProgressBar(double value, double durationSeconds = 0.3)
         {
@@ -178,6 +182,12 @@ namespace MessageBroadcast.Updater
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
             };
             ProgressBar.BeginAnimation(RangeBase.ValueProperty, animation);
+        }
+
+        // UI can only be updated from the UI thread, update via Dispatcher.Invoke
+        private void UpdateStatusLabelAsync(string txt)
+        {
+            Dispatcher.Invoke(() => { StatusLabel.Text = txt; });
         }
 
         private void UpdateProgressBarAsync(double value, double durationSeconds = 0.3)

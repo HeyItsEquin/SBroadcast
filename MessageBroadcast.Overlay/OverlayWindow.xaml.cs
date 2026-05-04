@@ -13,9 +13,6 @@ using VerticalAlignment = System.Windows.VerticalAlignment;
 
 namespace MessageBroadcast.Overlay
 {
-    /// <summary>
-    /// Interaction logic for OverlayWindow.xaml
-    /// </summary>
     public partial class OverlayWindow : Window
     {
         private CancellationTokenSource? _hideCts;
@@ -24,9 +21,11 @@ namespace MessageBroadcast.Overlay
         public OverlayWindow()
         {
             InitializeComponent();
+            // XAML doesn't like my icon, not sure why. Set it programatically
             Icon = IconLoader.LoadIcon() ?? Icon;
         }
 
+        // Display a message on the screen and play audio if present
         public async void ShowMessage(Message message)
         {
             _hideCts?.Cancel();
@@ -36,6 +35,7 @@ namespace MessageBroadcast.Overlay
             if (message.SoundData != null)
                 await _audioPlayer.PlayAsync(message.SoundData, message.SoundFormat);
 
+            // Messages that contain only sound don't create an overlay
             if (message.ContentType != MessageContentType.Sound)
             {
                 MessageText.Text = message.Text;
@@ -52,6 +52,7 @@ namespace MessageBroadcast.Overlay
 
             try
             {
+                // Message fades out smoothly after the allotted time
                 await Task.Delay(message.DisplaySeconds * 1000, token);
 
                 var fadeOut = new DoubleAnimation
@@ -72,11 +73,14 @@ namespace MessageBroadcast.Overlay
             }
             catch (OperationCanceledException)
             {
+                // A new message showed up while one was being shown
+                // Cancel the animation and show the text
                 MessageText.BeginAnimation(OpacityProperty, null);
                 MessageText.Opacity = 1;
             }
         }
 
+        // Stop current audio from system tray
         public void StopAudio() => _audioPlayer.Stop();
 
         private void ApplyPosition(MessagePosition position)

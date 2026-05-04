@@ -4,6 +4,7 @@ namespace MessageBroadcast.Core
 {
     public static class DeviceIdentity
     {
+        // Either use existing UUID or create new one
         public static Guid LoadOrCreateUuid()
         {
             Directory.CreateDirectory(Path.GetDirectoryName(Paths.DeviceUuidPath)!);

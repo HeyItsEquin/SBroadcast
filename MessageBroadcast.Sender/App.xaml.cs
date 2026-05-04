@@ -12,11 +12,14 @@ namespace MessageBroadcast.Sender
             base.OnStartup(e);
             ConfigStore.Instance.Load();
 
+            // Ensure both Sender and Overlay can access private networks
             EnsureFirewallRule();
 
             Dispatcher.InvokeAsync(async () =>
             {
                 var update = await VersionCheck.CheckForUpdates();
+                
+                // App is outdated, show update prompt
                 if (update != null)
                 {
                     var result = ShowUpdateDialog(update);
@@ -44,6 +47,7 @@ namespace MessageBroadcast.Sender
             };
         }
 
+        // Show update prompt as modal window
         private UpdatePromptResult ShowUpdateDialog(VersionCheck.UpdateInfo update)
         {
             var window = new UpdatePrompt();
@@ -54,6 +58,7 @@ namespace MessageBroadcast.Sender
             return window.Result;
         }
 
+        // Launch auto-updater process
         private void LaunchUpdater(VersionCheck.UpdateInfo update)
         {
             try
@@ -94,6 +99,7 @@ namespace MessageBroadcast.Sender
             }
         }
 
+        // Run netsh process for firewall rules
         private string RunNetsh(string args)
         {
             try

@@ -29,9 +29,10 @@ namespace MessageBroadcast.Sender
         public MainWindow()
         {
             InitializeComponent();
-            LoadAppConfig();
+            LoadAppConfig(); // Load and apply application configs
             Icon = IconLoader.LoadIcon() ?? Icon;
 
+            // Start overlay if it isn't running
             EnsureOverlayRunning();
 
             _localDevice = new DeviceInfo
@@ -69,6 +70,7 @@ namespace MessageBroadcast.Sender
             _discovery.Start();
         }
 
+        // Load and apply application configs
         private void LoadAppConfig()
         {
             var config = ConfigStore.Instance.GetAppConfig();
@@ -79,11 +81,13 @@ namespace MessageBroadcast.Sender
             FontColorCombo.SelectedIndex = FindComboIndex(FontColorCombo, config.DefaultFontColor);
         }
 
+        // Re-sort device list when a new device is added
         private void RefreshDeviceOrder()
         {
             _deviceViewSource.View.Refresh();
         }
 
+        // Find index of a combo box item based on Content property
         private int FindComboIndex(ComboBox comboBox, string value)
         {
             for (int i = 0; i < comboBox.Items.Count; i++)
@@ -102,6 +106,7 @@ namespace MessageBroadcast.Sender
                 var overlayProcessName = "MessageBroadcast.Overlay";
                 var existing = Process.GetProcessesByName(overlayProcessName);
 
+                // Overlay process isn't open, start it
                 if (existing.Length == 0)
                 {
                     Logger.Log("[SND] Overlay process not present, starting...");
@@ -150,13 +155,16 @@ namespace MessageBroadcast.Sender
                 device.LoadConfigs();
                 if (_devices.TryGetValue(device.Id, out var existing))
                 {
-                    existing.IpAddress = device.IpAddress;
+                    // If device already in list, update it
+                    existing.IpAddress = device.IpAddress; // Use latest IP
                     existing.LastSeen = device.LastSeen;
 
+                    // Add new IP to advertised
                     foreach (var ip in device.AdvertisedIps)
                         if (!existing.AdvertisedIps.Contains(ip))
                             existing.AdvertisedIps.Add(ip);
 
+                    // Update list entry
                     var index = _deviceList.IndexOf(existing);
                     if (index >= 0)
                     {
@@ -166,6 +174,7 @@ namespace MessageBroadcast.Sender
                 }
                 else
                 {
+                    // New device, add to list
                     _devices[device.Id] = device;
                     _deviceList.Add(device);
                 }
@@ -195,6 +204,7 @@ namespace MessageBroadcast.Sender
                 return;
             }
 
+            // List all advertised addresses for user to select
             foreach (var ip in device.AdvertisedIps)
             {
                 var capturedIp = ip;
@@ -282,6 +292,7 @@ namespace MessageBroadcast.Sender
 
         private void MessageInput_KeyDown(object sender, KeyEventArgs e)
         {
+            // Submit messages via enter like HTML form
             if (e.Key == Key.Enter)
             {
                 SendButton_Click(sender, e);
@@ -296,11 +307,13 @@ namespace MessageBroadcast.Sender
             {
                 _cts = new CancellationTokenSource();
 
+                // Scan for new devices
                 var discovered = await _discovery.ScanOnceAsync(_cts.Token);
                 var discoveredIds = discovered.Select(d => d.Id).ToHashSet();
 
                 Dispatcher.Invoke(() =>
                 {
+                    // Remove any device from list not present in latest scan
                     var toRemove = _devices.Values
                         .Where(d => !discoveredIds.Contains(d.Id))
                         .ToList();
@@ -331,9 +344,9 @@ namespace MessageBroadcast.Sender
             if (dialog.ShowDialog() != true) return;
 
             var fileInfo = new FileInfo(dialog.FileName);
-            if (fileInfo.Length > 16_000_000) // 16MB limit
+            if (fileInfo.Length > Message.MaxLength)
             {
-                MessageBox.Show("Sound file must be under 16MB.");
+                MessageBox.Show($"Sound file must be under {Message.MaxLengthDisplay}MB.");
                 return;
             }
 
@@ -361,6 +374,7 @@ namespace MessageBroadcast.Sender
         {
             if (DeviceList.SelectedItem is not DeviceInfo device) return;
 
+            // Inline text editing, very annoying
             Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, () =>
             {
                 var container = DeviceList.ItemContainerGenerator
@@ -380,6 +394,7 @@ namespace MessageBroadcast.Sender
             });
         }
 
+        // Generic helper fn, don't look too hard into it
         private T? FindVisualChild<T>(DependencyObject parent, string name) where T : FrameworkElement
         {
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)

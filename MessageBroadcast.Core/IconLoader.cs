@@ -6,6 +6,7 @@ namespace MessageBroadcast.Core
 {
     public class IconLoader
     {
+        // XAML doesn't like my icon so load it programatically
         public static ImageSource? LoadIcon()
         {
             if (!File.Exists(Paths.IconPath)) return null;

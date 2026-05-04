@@ -20,14 +20,16 @@ namespace MessageBroadcast.Core
         public string? DeviceName { get; set; }
         public MessageContentType ContentType { get; set; } = MessageContentType.Text;
         public string Text { get; set; } = string.Empty;
-        public byte[]? ImageData { get; set; }
-        public byte[]? SoundData { get; set; }
-        public string? SoundFormat { get; set; }
+        public byte[]? ImageData { get; set; } // Raw image data for when the message has an image
+        public byte[]? SoundData { get; set; } // Raw sound data for when the message has audio 
+        public string? SoundFormat { get; set; } // Audio format (WAV, MP3, etc.)
         public int FontSize { get; set; } = 36;
         public string FontFamily { get; set; } = "Segoe UI";
         public string FontColor { get; set; } = "#FFFFFF";
-        public int DisplaySeconds { get; set; } = 5;
-        public MessagePosition Position { get; set; } = MessagePosition.Center;
+        public int DisplaySeconds { get; set; } = 5; // How long the message should display for
+        public MessagePosition Position { get; set; } = MessagePosition.Center; // Where should the message display on the screen
+        public static int MaxLength { get; } = 32_000_000; // 32MB for messsage and any payload (image/audio)
+        public static int MaxLengthDisplay => MaxLength / 1_000_000; // Bytes => MB
     }
 
     public enum MessagePosition

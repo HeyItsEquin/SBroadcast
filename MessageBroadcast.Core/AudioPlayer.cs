@@ -18,6 +18,7 @@ namespace MessageBroadcast.Core
             string? tempPath = null;
             try
             {
+                // Write sound data to temp file
                 tempPath = Path.Combine(
                     Path.GetTempPath(),
                     $"mbsound_{Guid.NewGuid()}.{format ?? "mp3"}");
@@ -55,10 +56,13 @@ namespace MessageBroadcast.Core
             }
         }
 
+        // Audio stops automatically, but for larger audios, let the user stop it manually
         public void Stop()
         {
+            // Return if not currently playing
             if (_output == null) return;
 
+            // Store these temporarily so we can still clean them up
             var output = _output;
             var reader = _reader;
             var tempPath = _tempPath;
@@ -88,6 +92,7 @@ namespace MessageBroadcast.Core
             }
         }
 
+        // Required for IDisposable, just stop audio
         public void Dispose()
         {
             Stop();
