@@ -27,7 +27,7 @@
 
 	<ItemGroup>
 		<None Include="..\Assets\app.ico" Link="Assets\app.ico">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 	

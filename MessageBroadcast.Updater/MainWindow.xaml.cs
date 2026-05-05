@@ -139,7 +139,8 @@ namespace MessageBroadcast.Updater
             lines.Add("@echo off");
             lines.Add("timeout /t 2 /nobreak > nul"); // Wait a bit to allow file locks to release
 
-            foreach (var file in Directory.GetFiles(extractRoot))
+            var runtimeExtractPath = Path.Combine(extractRoot, "runtime");
+            foreach (var file in Directory.GetFiles(runtimeExtractPath))
             {
                 var fileName = Path.GetFileName(file);
                 lines.Add($"copy /y \"{file}\" \"{Path.Combine(appDir, fileName)}\"");
