@@ -18,14 +18,10 @@ namespace MessageBroadcast.Core
         {
             var current = Assembly.GetEntryAssembly()!.GetName().Version!;
 
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.UserAgent.Add(
-                new ProductInfoHeaderValue("SBroadcast", current.ToString()));
+            var root = GetLatestReleaseInfo(current);
 
-            var response = await client.GetStringAsync(GithubLatestReleaseUrl);
-            var json = JsonDocument.Parse(response);
-            var root = json.RootElement;
-
+            // Get tag name of latest release
+            // Release tag format: vX.X.X (v1.2.1)
             var tagName = root.GetProperty("tag_name").GetString()!;
             var latest = Version.Parse(tagName.TrimStart('v'));
 
@@ -40,11 +36,25 @@ namespace MessageBroadcast.Core
             foreach (var asset in assets.EnumerateArray())
             {
                 var url = asset.GetProperty("browser_download_url").GetString()!;
+                // TODO: Make this check better for if I ever have to add more than 1 zip
                 if (url.EndsWith(".zip"))
                     return new UpdateInfo(tagName, url, current, latest);
             }
 
             return null;
+        }
+
+        private static async Task<JsonDocument?> GetLatestReleaseInfo(Version current)
+        {
+            using var client = new HttpClient();
+            // Github's API will reject requests without this header
+            client.DefaultRequestHeaders.UserAgent.Add(
+                new ProductInfoHeaderValue("SBroadcast", current.ToString()));
+
+            var response = await client.GetStringAsync(GithubLatestReleaseUrl);
+            var json = JsonDocument.Parse(response);
+
+            return json.RootElement;
         }
 
         // Updater creates a batch file to copy files over, remove it

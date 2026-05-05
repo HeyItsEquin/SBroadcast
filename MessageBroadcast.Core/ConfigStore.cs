@@ -6,43 +6,50 @@ namespace MessageBroadcast.Core
 {
     public class AppConfig
     {
+        // Message option defaults
         public int DefaultFontSize { get; set; } = 36;
         public string DefaultFontFamily { get; set; } = "Segoe UI";
         public string DefaultFontColor { get; set; } = "#FFFFFF";
         public int DefaultDisplaySeconds { get; set; } = 5;
         public MessagePosition DefaultPosition { get; set; } = MessagePosition.Center;
 
+        // The version number that the user skipped
+        // If this is the latest version, do not prompt to update
         [JsonConverter(typeof(VersionConverter))]
         public Version? SkipVersion { get; set; } = null;
     }
 
     public class DeviceConfig
     {
-        public string? Nickname { get; set; }
-        public bool Blocked { get; set; } = false;
-        public bool Favorite { get; set; } = false;
-        public string? PreferredIp { get; set; }
+        public string? Nickname { get; set; }       // The nickname given to this user (or null if none has been given)
+        public bool Blocked { get; set; } = false;  // Whether this device has been blocked
+        public bool Favorite { get; set; } = false; // Whether this device is favorited
+        public string? PreferredIp { get; set; }    // IP used for communication with this device
     }
 
     public class ConfigStore
     {
+        // Singleton
         public static ConfigStore Instance { get; } = new();
 
         private AppConfig _appConfig = new();
         private Dictionary<Guid, DeviceConfig> _deviceConfigs = new();
 
+        // After this is called, ConfigStore will be ready to pull from
         public void Load()
         {
             LoadPreferences();
             LoadDeviceConfigs();
         }
 
+        // Write updated configs
         public void Save()
         {
             SavePreferences();
             SaveDeviceConfigs();
         }
 
+        // Load settings from preferences.json
         public void LoadPreferences()
         {
             try
@@ -52,6 +59,7 @@ namespace MessageBroadcast.Core
                 if (!File.Exists(Paths.PreferencesPath))
                 {
                     _appConfig = new AppConfig();
+                    // TODO: Create preferences file when missing
                     Logger.Log("[MB] No preferences file found, using defaults");
                     return;
                 }
@@ -74,7 +82,7 @@ namespace MessageBroadcast.Core
 
                 var json = JsonSerializer.Serialize(_appConfig, new JsonSerializerOptions
                 {
-                    WriteIndented = true
+                    WriteIndented = true // Make it human-readable
                 });
 
                 File.WriteAllText(Paths.PreferencesPath, json);
@@ -118,7 +126,7 @@ namespace MessageBroadcast.Core
 
                 var json = JsonSerializer.Serialize(_deviceConfigs, new JsonSerializerOptions
                 {
-                    WriteIndented = true
+                    WriteIndented = true // Make it human-readable
                 });
 
                 File.WriteAllText(Paths.DeviceConfigsPath, json);
@@ -143,17 +151,21 @@ namespace MessageBroadcast.Core
             SaveDeviceConfigs();
         }
 
+        // I don't think this is even used
         public void RemoveDeviceConfig(Guid deviceId)
         {
             _deviceConfigs.Remove(deviceId);
             SaveDeviceConfigs();
         }
 
+        // Update a specific property of a device's config
+        // Get property via nameof(DeviceConfig.Property)
         public void UpdateDeviceConfig(Guid deviceId, string property, object value)
         {
             var prop = typeof(DeviceConfig).GetProperty(property)
                 ?? throw new ArgumentException($"DeviceConfig has no such property '{property}'");
 
+            // Value must be the correct type
             if (!prop.PropertyType.IsAssignableFrom(value.GetType()))
                 throw new ArgumentException($"Expected value of type {prop.PropertyType.Name}, got {value.GetType().Name}");
 
@@ -173,11 +185,13 @@ namespace MessageBroadcast.Core
             SavePreferences();
         }
 
+        // Get property name via nameof(AppConfig.Property)
         public void UpdateAppConfig(string property, object value)
         {
             var prop = typeof(AppConfig).GetProperty(property)
                 ?? throw new ArgumentException($"AppConfig has no such property '{property}'");
 
+            // Make sure value is the correct type
             if (!prop.PropertyType.IsAssignableFrom(value.GetType()))
                 throw new ArgumentException($"Expected value of type {prop.PropertyType.Name}, got {value.GetType().Name}");
 
@@ -187,6 +201,7 @@ namespace MessageBroadcast.Core
         }
     }
 
+    // JsonDeserializer doesn't provide a native way to deserialize version strings to Version objects
     public class VersionConverter : JsonConverter<Version>
     {
         public override Version? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

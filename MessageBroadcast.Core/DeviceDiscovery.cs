@@ -5,6 +5,7 @@ using System.Net.Sockets;
 
 namespace MessageBroadcast.Core
 {
+    // This class is the bane of my existence
     public class DeviceDiscovery : IDisposable
     {
         private const string ServiceType = "_msgbroadcast._udp.local.";
@@ -15,7 +16,8 @@ namespace MessageBroadcast.Core
 
         public event Action<DeviceInfo>? DeviceDiscovered;
 
-        private string? _interfaceFilter;
+        private string? _interfaceFilter; // Allow to filter for certain interfaces by name
+                                          // Strictly for debugging.
 
         private readonly Dictionary<Guid, List<IPAddress>> _pendingAddresses = new();
         private readonly Dictionary<Guid, CancellationTokenSource> _pendingTimers = new();
@@ -31,6 +33,7 @@ namespace MessageBroadcast.Core
 
             _cts = new CancellationTokenSource();
 
+            // Makaretu makes device discovery MUCH easier via mDNS
             _mdns = new MulticastService(interfaces => GetUsableInterfaces());
             _sd = new ServiceDiscovery(_mdns);
 
@@ -41,6 +44,7 @@ namespace MessageBroadcast.Core
 
                 if (interfaceFilter != null)
                 {
+                    // Filter by interface name
                     var match = e.NetworkInterfaces.Any(i =>
                         i.Name.Contains(interfaceFilter, StringComparison.OrdinalIgnoreCase));
 
@@ -60,12 +64,15 @@ namespace MessageBroadcast.Core
                 ServiceType,
                 (ushort)_localDevice.Port);
 
+            // Some addresses/interfaces may be unusable for communication
             var validAddresses = GetUsableInterfaces()
                 .SelectMany(i => i.GetIPProperties().UnicastAddresses)
                 .Where(a => a.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                 .Select(a => a.Address)
                 .ToList();
 
+            // Broadcast only valid addresses
+            // If I remember correctly this might not even work, Makaretu was brodacasting all IPs anyway
             foreach (var address in validAddresses)
             {
                 Logger.Log($"[MB] Advertising IP: {address}");
@@ -76,15 +83,16 @@ namespace MessageBroadcast.Core
                 });
             }
 
-            foreach (var record in profile.Resources)
-            {
-                Logger.Log($"[MB] Profile resource: {record}");
-            }
+            // foreach (var record in profile.Resources)
+            // {
+            //     Logger.Log($"[MB] Profile resource: {record}");
+            // }
 
             profile.AddProperty("uuid", _localDevice.Id.ToString());
             profile.AddProperty("name", _localDevice.Name);
             profile.AddProperty("port", _localDevice.Port.ToString());
 
+            // Broadcast self and start discovery service
             _sd.Advertise(profile);
             _mdns.Start();
         }
@@ -94,9 +102,11 @@ namespace MessageBroadcast.Core
             return NetworkInterface.GetAllNetworkInterfaces()
                 .Where(i =>
                 {
+                    // Only return operation non-loopback addresses
                     if (i.OperationalStatus != OperationalStatus.Up) return false;
                     if (i.NetworkInterfaceType == NetworkInterfaceType.Loopback) return false;
 
+                    // Only allow actual physical/virtual network interfaces
                     var allowedTypes = new[]
                     {
                         NetworkInterfaceType.Ethernet,
@@ -106,6 +116,8 @@ namespace MessageBroadcast.Core
                         NetworkInterfaceType.FastEthernetFx
                     };
 
+                    // Allow virtual LAN services
+                    // This specific bit of code might be redundant
                     if (allowedTypes.Contains(i.NetworkInterfaceType)) return true;
                     if (i.Description.Contains("TAP", StringComparison.OrdinalIgnoreCase)) return true;
                     if (i.Description.Contains("Radmin", StringComparison.OrdinalIgnoreCase)) return true;
@@ -130,29 +142,37 @@ namespace MessageBroadcast.Core
                 //    Logger.Log($"[MB] A record in response: {a}");
 
                 if (txtRecord == null || !aRecords.Any()) return;
-
+                
+                // Split into K,V pairs of all the data we broadcast
                 var props = txtRecord.Strings
                     .Select(s => s.Split('=', 2))
                     .Where(p => p.Length == 2)
                     .ToDictionary(p => p[0], p => p[1]);
 
+                // Get broadcasted UUID, make sure it isn't our own
                 if (!props.TryGetValue("uuid", out var uuidStr)) return;
                 if (!Guid.TryParse(uuidStr, out var uuid)) return;
                 if (uuid == _localDevice.Id) return;
-
+                
+                // Get broadcasted name & port
                 props.TryGetValue("name", out var deviceName);
                 props.TryGetValue("port", out var portStr);
                 int.TryParse(portStr, out var port);
-
+                
+                // For every new connection, wait a little bit so we can collect all the addresses first
+                // This is required because we need all the addresses to find a valid one
+                // Otherwise, might try to connect to an invalid address (e.g., a Docker or Hyper-V virtual address)
                 lock (_pendingAddresses)
                 {
                     if (!_pendingAddresses.ContainsKey(uuid))
                     {
+                        // Store all broadcasted addresses based on device UUID
                         _pendingAddresses[uuid] = new List<IPAddress>();
 
                         var cts = new CancellationTokenSource();
                         _pendingTimers[uuid] = cts;
 
+                        // Take 2s to collect all the addresses
                         Task.Delay(2000, cts.Token).ContinueWith(t =>
                         {
                             if (t.IsCanceled) return;
@@ -168,6 +188,7 @@ namespace MessageBroadcast.Core
 
                             _ = Task.Run(async () =>
                             {
+                                // Makaretu might broadcast invalid (unreachable addresses)
                                 var ip = await PickBestReachableAddress(addressSnapshot);
                                 if (ip == null)
                                 {
@@ -185,6 +206,8 @@ namespace MessageBroadcast.Core
                                     AdvertisedIps = addressSnapshot.Select(a => a.ToString()).ToList()
                                 };
 
+                                // After we've identified a device, gathered all its addresses, and picked the best one to communicate
+                                // we can finally say that device is valid
                                 Logger.Log($"[MB] Device found: {device.Name} at {device.IpAddress}:{device.Port}");
                                 DeviceDiscovered?.Invoke(device);
                             });
@@ -200,6 +223,10 @@ namespace MessageBroadcast.Core
             }
         }
 
+        // Despite telling it not to, Makaretu broadcasts all 'valid' addresses
+        // Regardless of whether they are communicatable or not
+        // Asynchronously attempt to reach every address, return only the ones that respond properly
+        // Addresses that are technically 'valid' but are unusable are mainly virtual interfaces like Docker and Hyper-V
         private async Task<string?> PickBestReachableAddress(List<IPAddress> addresses)
         {
             var localIps = GetUsableInterfaces()
@@ -212,13 +239,14 @@ namespace MessageBroadcast.Core
 
             var candidates = addresses
                 .Distinct()
-                .Where(a => !localIps.Contains(a.ToString()))
+                .Where(a => !localIps.Contains(a.ToString())) // Don't try to connect to ourself
                 .Select(a => (Address: a, Score: ScoreAddress(a, localIps.Select(IPAddress.Parse).ToList())))
                 .OrderBy(x => x.Score)
                 .ToList();
 
             Logger.Log($"[MB] Candidates after filtering own IPs: {string.Join(", ", candidates.Select(c => $"{c.Address}={c.Score}"))}");
 
+            // All addresses are invalid
             if (!candidates.Any())
             {
                 Logger.Log("[MB] No candidates remaining after filtering");
@@ -229,6 +257,7 @@ namespace MessageBroadcast.Core
             {
                 try
                 {
+                    // Try to connect to address with 500ms timeout
                     using var client = new TcpClient();
                     using var connectCts = new CancellationTokenSource(500);
                     await client.ConnectAsync(candidate.Address.ToString(), _localDevice.Port, connectCts.Token);
@@ -259,6 +288,7 @@ namespace MessageBroadcast.Core
             return null;
         }
 
+        // Assign each address a score used to find the best one
         private int ScoreAddress(IPAddress candidate, List<IPAddress> localIps)
         {
             var cb = candidate.GetAddressBytes();
@@ -266,6 +296,8 @@ namespace MessageBroadcast.Core
             foreach (var local in localIps)
             {
                 var lb = local.GetAddressBytes();
+
+                // Score addresses based on how many bytes they share with our local address
 
                 if (cb[0] == lb[0] && cb[1] == lb[1] && cb[2] == lb[2])
                     return 0;
@@ -280,6 +312,7 @@ namespace MessageBroadcast.Core
             return 3;
         }
 
+        // Run a single scan to find all currently available devices
         public async Task<List<DeviceInfo>> ScanOnceAsync(CancellationToken ct)
         {
             var discovered = new List<DeviceInfo>();
@@ -311,6 +344,7 @@ namespace MessageBroadcast.Core
             // Artifact. Keep for compatibility
         }
 
+        // Required for IDisposable
         public void Dispose()
         {
             _cts?.Cancel();

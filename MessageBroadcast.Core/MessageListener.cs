@@ -60,7 +60,7 @@ namespace MessageBroadcast.Core
                     await ReadExactAsync(stream, lengthBuffer, ct);
                     var messageLength = BitConverter.ToInt32(lengthBuffer);
 
-                    if (messageLength <= 0 || messageLength > 8_000_000 * 1.4) // 1.4x for B64 overhead
+                    if (messageLength <= 0 || messageLength > Message.MaxLength * 1.4) // 1.4x for B64 overhead
                         return;
 
                     var messageBuffer = new byte[messageLength];

@@ -52,12 +52,14 @@ namespace MessageBroadcast.Overlay
             Dispatcher.Invoke(async () =>
             {
                 var config = ConfigStore.Instance.GetDeviceConfig(message.SenderId);
+                // Don't show blocked messages
                 if(config.Blocked)
                 {
                     Logger.Log($"[OVR] Message received from blocked user ({message.DeviceName}) was not shown");
                     return;
                 }
 
+                // Messages that contain only sound don't create an overlay
                 if (message.ContentType == MessageContentType.Sound)
                 {
                     await _audioPlayer.PlayAsync(message.SoundData!, message.SoundFormat);
@@ -66,6 +68,7 @@ namespace MessageBroadcast.Overlay
 
                 if (_overlay == null)
                 {
+                    // Create and display a new overlay window
                     _overlay = new OverlayWindow();
                     _overlay.Closed += (_, _) => _overlay = null;
                     _overlay.Show();
@@ -77,6 +80,7 @@ namespace MessageBroadcast.Overlay
 
         private void SetupTrayIcon()
         {
+            // Create an icon in the system tray with various options
             _trayIcon = new NotifyIcon
             {
                 Icon = File.Exists(Paths.IconPath) ? new Icon(Paths.IconPath) : SystemIcons.Application,
@@ -167,6 +171,7 @@ namespace MessageBroadcast.Overlay
             return key?.GetValue("MessageOverlay") != null;
         }
 
+        // Register overlay to start with Windows
         private void RegisterStartup()
         {
             using var key = Registry.CurrentUser.OpenSubKey(
@@ -174,6 +179,7 @@ namespace MessageBroadcast.Overlay
             key?.SetValue("MessageOverlay", $"\"{Environment.ProcessPath}\"");
         }
 
+        // Unregister overlay, don't start with Windows
         private void UnregisterStartup()
         {
             using var key = Registry.CurrentUser.OpenSubKey(
