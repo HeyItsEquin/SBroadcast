@@ -22,7 +22,7 @@
 
 	<PropertyGroup>
 		<ApplicationIcon>..\Assets\app.ico</ApplicationIcon>
-		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<ApplicationManifest></ApplicationManifest>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -33,5 +33,11 @@
 	
 	<ItemGroup>
 		<ProjectReference Include="..\MessageBroadcast.Core\MessageBroadcast.Core.csproj" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <Compile Update="OverlayWindow.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
 	</ItemGroup>
 </Project>

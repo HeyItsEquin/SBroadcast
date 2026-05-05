@@ -35,9 +35,6 @@ namespace MessageBroadcast.Sender
             LoadAppConfig(); // Load and apply application configs
             Icon = IconLoader.LoadIcon() ?? Icon;
 
-            // Start overlay if it isn't running
-            EnsureOverlayRunning();
-
             _localDevice = new DeviceInfo
             {
                 Id = DeviceIdentity.LoadOrCreateUuid(),
@@ -80,6 +77,13 @@ namespace MessageBroadcast.Sender
             _discovery.Start();
         }
 
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            e.Cancel = true;
+            Hide();
+            base.OnClosing(e);
+        }
+
         // Load and apply application configs
         private void LoadAppConfig()
         {
@@ -110,54 +114,6 @@ namespace MessageBroadcast.Sender
                     return i;
             }
             return 0;
-        }
-
-        private void EnsureOverlayRunning()
-        {
-            try
-            {
-                var overlayProcessName = "MessageBroadcast.Overlay";
-                var existing = Process.GetProcessesByName(overlayProcessName);
-
-                // Overlay process isn't open, start it
-                if (existing.Length == 0)
-                {
-                    Logger.Log("[SND] Overlay process not present, starting...");
-
-                    var overlayPath = Path.Combine(
-                        AppDomain.CurrentDomain.BaseDirectory,
-                        "MessageBroadcast.Overlay.exe");
-
-                    if (File.Exists(overlayPath))
-                    {
-                        Process.Start(new ProcessStartInfo
-                        {
-                            FileName = overlayPath,
-                            UseShellExecute = false
-                        });
-
-                        Logger.Log("[SND] Started overlay process from Sender");
-                    }
-                    else
-                    {
-                        MessageBox.Show("[SND] Could not find MessageBroadcast.Overlay.exe. " +
-                            "Please make sure it is in the same folder as the Sender.");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Log($"[SND] Failed to start overlay process: {ex.GetType().Name} - {ex.Message}");
-                
-                var inner = ex.InnerException;
-                if (inner != null)
-                    Logger.Log($"[SND] Inner Exception: {inner.GetType().Name} - {ex.Message}");
-
-                MessageBox.Show(
-                    $"Failed to start overlay process, please check the logs.",
-                    "Unhandled exception",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
         }
 
         private void OnDeviceDiscovered(DeviceInfo device)

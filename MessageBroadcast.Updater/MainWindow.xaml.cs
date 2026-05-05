@@ -61,13 +61,6 @@ namespace MessageBroadcast.Updater
             }
             catch (ArgumentException) { }
 
-            StatusLabel.Text = "Waiting for Overlay to close...";
-            foreach (var overlay in Process.GetProcessesByName("MessageBroadcast.Overlay"))
-            {
-                overlay.Kill();
-                await Task.Run(() => overlay.WaitForExit());
-            }
-
             UpdateProgressBar(1, durationSeconds: 0.1);
         }
 
