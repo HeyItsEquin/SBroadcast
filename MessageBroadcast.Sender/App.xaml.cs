@@ -42,7 +42,8 @@ namespace MessageBroadcast.Sender
             _discovery.Start();
 
             _mainWindow = new MainWindow();
-            _mainWindow.Show();
+            if (!e.Args.Contains("--hidden"))
+                _mainWindow.Show();
 
             SetupTrayIcon();
 
@@ -217,7 +218,7 @@ namespace MessageBroadcast.Sender
         {
             using var key = Registry.CurrentUser.OpenSubKey(
                 @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
-            key?.SetValue("MessageSender", $"\"{Environment.ProcessPath}\"");
+            key?.SetValue("MessageSender", $"\"{Environment.ProcessPath}\" --hidden");
         }
 
         // Unregister sender, don't start with Windows
