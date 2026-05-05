@@ -58,7 +58,7 @@ namespace MessageBroadcast.Overlay
             // Messages that contain only sound don't create an overlay
             if (message.ContentType != MessageContentType.Sound)
             {
-                if (message.AnchorTextToImage == true)
+                if (message.AnchorTextToImage == true && message.ImageData != null)
                 {
                     AnchoredMessageText.Text = message.Text;
                     AnchoredMessageText.FontSize = message.FontSize;
@@ -111,7 +111,7 @@ namespace MessageBroadcast.Overlay
                 var tcs = new TaskCompletionSource();
                 fadeOut.Completed += (_, _) => tcs.TrySetResult();
 
-                if (message.AnchorTextToImage == true)
+                if (message.AnchorTextToImage == true && message.ImageData != null)
                     AnchoredMessageText.BeginAnimation(OpacityProperty, fadeOut);
                 else
                     MessageText.BeginAnimation(OpacityProperty, fadeOut);
