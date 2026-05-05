@@ -13,20 +13,6 @@
         <local:MultiplyConverter x:Key="MultiplyConverter"/>
     </Window.Resources>
     <Grid>
-        <TextBlock x:Name="MessageText"
-                   Foreground="White"
-                   FontSize="68"
-                   FontWeight="Bold"
-                   FontFamily="Trebuchet MS"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   TextWrapping="Wrap"
-                   Visibility="Hidden">
-            <TextBlock.Effect>
-                <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="2"/>
-            </TextBlock.Effect>
-        </TextBlock>
-
         <Grid x:Name="ImageContainer"
               HorizontalAlignment="Center"
               VerticalAlignment="Center">
@@ -54,5 +40,19 @@
                 </TextBlock.Effect>
             </TextBlock>
         </Grid>
+
+        <TextBlock x:Name="MessageText"
+                   Foreground="White"
+                   FontSize="68"
+                   FontWeight="Bold"
+                   FontFamily="Trebuchet MS"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   TextWrapping="Wrap"
+                   Visibility="Hidden">
+            <TextBlock.Effect>
+                <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="2"/>
+            </TextBlock.Effect>
+        </TextBlock>
     </Grid>
 </Window>

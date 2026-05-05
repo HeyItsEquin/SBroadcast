@@ -1,6 +1,7 @@
 ﻿using MessageBroadcast.Core;
 using System.Globalization;
 using System.IO;
+using System.Printing;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
@@ -43,48 +44,81 @@ namespace MessageBroadcast.Overlay
             _hideCts = new CancellationTokenSource();
             var token = _hideCts.Token;
 
+            // Reset all UI state
+            MessageText.BeginAnimation(OpacityProperty, null);
+            MessageText.Visibility = Visibility.Hidden;
+            AnchoredMessageText.BeginAnimation(OpacityProperty, null);
+            AnchoredMessageText.Visibility = Visibility.Hidden;
+            ImageDisplay.BeginAnimation(OpacityProperty, null);
+            ImageDisplay.Visibility = Visibility.Hidden;
+
             if (message.SoundData != null)
                 await _audioPlayer.PlayAsync(message.SoundData, message.SoundFormat);
 
             // Messages that contain only sound don't create an overlay
             if (message.ContentType != MessageContentType.Sound)
             {
-                MessageText.Text = message.Text;
-                MessageText.FontSize = message.FontSize;
-                MessageText.FontFamily = new FontFamily(message.FontFamily);
-                MessageText.Foreground = new SolidColorBrush(
-                    (Color)ColorConverter.ConvertFromString(message.FontColor));
+                if (message.AnchorTextToImage == true)
+                {
+                    AnchoredMessageText.Text = message.Text;
+                    AnchoredMessageText.FontSize = message.FontSize;
+                    AnchoredMessageText.FontFamily = new FontFamily(message.FontFamily);
+                    AnchoredMessageText.Foreground = new SolidColorBrush(
+                        (Color)ColorConverter.ConvertFromString(message.FontColor));
 
-                ApplyMessagePosition(message.Position);
+                    ApplyPosition(AnchoredMessageText, message.Position);
 
-                // TODO: Add image-relative text positioning
-                MessageText.Visibility = Visibility.Visible;
-                MessageText.Opacity = 1;
+                    AnchoredMessageText.Visibility = Visibility.Visible;
+                    AnchoredMessageText.Opacity = 1;
+                }
+                else
+                {
+                    MessageText.Text = message.Text;
+                    MessageText.FontSize = message.FontSize;
+                    MessageText.FontFamily = new FontFamily(message.FontFamily);
+                    MessageText.Foreground = new SolidColorBrush(
+                        (Color)ColorConverter.ConvertFromString(message.FontColor));
+
+                    ApplyPosition(MessageText, message.Position);
+
+                    MessageText.Visibility = Visibility.Visible;
+                    MessageText.Opacity = 1;
+                }
 
                 if (message.ContentType.HasFlag(MessageContentType.Image))
                 {
+                    ApplyPosition(ImageContainer, message.ImagePosition);
+
                     ImageDisplay.Source = BytesToBitmapImage(message.ImageData!);
+                    ImageDisplay.Visibility = Visibility.Visible;
+                    ImageDisplay.Opacity = 1;
                 }
             }
 
             try
             {
                 // Message fades out smoothly after the allotted time
-                await Task.Delay(message.DisplaySeconds * 1000, token);
+                await Task.Delay(TimeSpan.FromSeconds(message.DisplaySeconds), token);
 
                 var fadeOut = new DoubleAnimation
                 {
                     From = 1.0,
                     To = 0.0,
-                    Duration = TimeSpan.FromSeconds(1),
+                    Duration = TimeSpan.FromSeconds(message.FadeoutTimeSeconds),
                     EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
                 };
 
                 var tcs = new TaskCompletionSource();
                 fadeOut.Completed += (_, _) => tcs.TrySetResult();
 
-                MessageText.BeginAnimation(OpacityProperty, fadeOut);
-                ImageDisplay.BeginAnimation(OpacityProperty, fadeOut);
+                if (message.AnchorTextToImage == true)
+                    AnchoredMessageText.BeginAnimation(OpacityProperty, fadeOut);
+                else
+                    MessageText.BeginAnimation(OpacityProperty, fadeOut);
+
+                if (message.ContentType.HasFlag(MessageContentType.Image))
+                    ImageDisplay.BeginAnimation(OpacityProperty, fadeOut);
+
                 await tcs.Task;
 
                 Close();
@@ -92,9 +126,14 @@ namespace MessageBroadcast.Overlay
             catch (OperationCanceledException)
             {
                 // A new message showed up while one was being shown
-                // Cancel the animation and show the text
+                // Cancel the animation and show the message
                 MessageText.BeginAnimation(OpacityProperty, null);
                 MessageText.Opacity = 1;
+                AnchoredMessageText.BeginAnimation(OpacityProperty, null);
+                AnchoredMessageText.Opacity = 1;
+                ImageDisplay.BeginAnimation(OpacityProperty, null);
+                ImageDisplay.Visibility = Visibility.Hidden;
+                ImageDisplay.Opacity = 1;
             }
         }
 
@@ -115,43 +154,9 @@ namespace MessageBroadcast.Overlay
             return bitmap;
         }
 
-        private void ApplyImagePosition(MessagePosition position)
+        private void ApplyPosition(FrameworkElement element, MessagePosition position)
         {
-            (ImageDisplay.HorizontalAlignment, ImageDisplay.VerticalAlignment) = position switch
-            {
-                MessagePosition.TopLeft => (HorizontalAlignment.Left, VerticalAlignment.Top),
-                MessagePosition.TopCenter => (HorizontalAlignment.Center, VerticalAlignment.Top),
-                MessagePosition.TopRight => (HorizontalAlignment.Right, VerticalAlignment.Top),
-                MessagePosition.MiddleLeft => (HorizontalAlignment.Left, VerticalAlignment.Center),
-                MessagePosition.Center => (HorizontalAlignment.Center, VerticalAlignment.Center),
-                MessagePosition.MiddleRight => (HorizontalAlignment.Right, VerticalAlignment.Center),
-                MessagePosition.BottomLeft => (HorizontalAlignment.Left, VerticalAlignment.Bottom),
-                MessagePosition.BottomCenter => (HorizontalAlignment.Center, VerticalAlignment.Bottom),
-                MessagePosition.BottomRight => (HorizontalAlignment.Right, VerticalAlignment.Bottom),
-                _ => (HorizontalAlignment.Center, VerticalAlignment.Center)
-            };
-        }
-
-        private void ApplyInnerMessagePosition(MessagePosition position)
-        {
-            (AnchoredMessageText.HorizontalAlignment, AnchoredMessageText.VerticalAlignment) = position switch
-            {
-                MessagePosition.TopLeft => (HorizontalAlignment.Left, VerticalAlignment.Top),
-                MessagePosition.TopCenter => (HorizontalAlignment.Center, VerticalAlignment.Top),
-                MessagePosition.TopRight => (HorizontalAlignment.Right, VerticalAlignment.Top),
-                MessagePosition.MiddleLeft => (HorizontalAlignment.Left, VerticalAlignment.Center),
-                MessagePosition.Center => (HorizontalAlignment.Center, VerticalAlignment.Center),
-                MessagePosition.MiddleRight => (HorizontalAlignment.Right, VerticalAlignment.Center),
-                MessagePosition.BottomLeft => (HorizontalAlignment.Left, VerticalAlignment.Bottom),
-                MessagePosition.BottomCenter => (HorizontalAlignment.Center, VerticalAlignment.Bottom),
-                MessagePosition.BottomRight => (HorizontalAlignment.Right, VerticalAlignment.Bottom),
-                _ => (HorizontalAlignment.Center, VerticalAlignment.Center)
-            };
-        }
-
-        private void ApplyMessagePosition(MessagePosition position)
-        {
-            (MessageText.HorizontalAlignment, MessageText.VerticalAlignment) = position switch
+            (element.HorizontalAlignment, element.VerticalAlignment) = position switch
             {
                 MessagePosition.TopLeft => (HorizontalAlignment.Left, VerticalAlignment.Top),
                 MessagePosition.TopCenter => (HorizontalAlignment.Center, VerticalAlignment.Top),

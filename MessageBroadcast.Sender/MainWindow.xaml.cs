@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -52,10 +53,13 @@ namespace MessageBroadcast.Sender
 
             DeviceList.ItemsSource = _deviceViewSource.View;
 
+            // Event handlers for updating config
             FontSizeSlider.ValueChanged += (_, _) => 
                 ConfigStore.Instance.UpdateAppConfig(nameof(AppConfig.DefaultFontSize), (int)FontSizeSlider.Value);
             DisplayTimeSlider.ValueChanged += (_, _) =>
-                ConfigStore.Instance.UpdateAppConfig(nameof(AppConfig.DefaultDisplaySeconds), (int)DisplayTimeSlider.Value);
+                ConfigStore.Instance.UpdateAppConfig(nameof(AppConfig.DefaultDisplaySeconds), DisplayTimeSlider.Value);
+            FadeoutTimeSlider.ValueChanged += (_, _) =>
+                ConfigStore.Instance.UpdateAppConfig(nameof(AppConfig.FadeoutTimeSeconds), FadeoutTimeSlider.Value);
             PositionCombo.SelectionChanged += (_, _) =>
                 ConfigStore.Instance.UpdateAppConfig(nameof(AppConfig.DefaultPosition), (MessagePosition)PositionCombo.SelectedIndex);
             FontFamilyCombo.SelectionChanged += (_, _) =>
@@ -64,6 +68,10 @@ namespace MessageBroadcast.Sender
             FontColorCombo.SelectionChanged += (_, _) =>
                 ConfigStore.Instance.UpdateAppConfig(nameof(AppConfig.DefaultFontColor),
                 (FontColorCombo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "White");
+            ImagePositionCombo.SelectionChanged += (_, _) =>
+                ConfigStore.Instance.UpdateAppConfig(nameof(AppConfig.DefaultImagePosition), (MessagePosition)ImagePositionCombo.SelectedIndex);
+            AnchorTextCheckbox.Checked += (_, _) =>
+                ConfigStore.Instance.UpdateAppConfig(nameof(AppConfig.AnchorTextToImage), AnchorTextCheckbox.IsChecked ?? false);
 
             _sender = new MessageSender();
 
@@ -77,10 +85,13 @@ namespace MessageBroadcast.Sender
         {
             var config = ConfigStore.Instance.GetAppConfig();
             FontSizeSlider.Value = (double)config.DefaultFontSize;
-            DisplayTimeSlider.Value = (double)config.DefaultDisplaySeconds;
+            DisplayTimeSlider.Value = config.DefaultDisplaySeconds;
+            FadeoutTimeSlider.Value = config.FadeoutTimeSeconds;
             PositionCombo.SelectedIndex = (int)config.DefaultPosition;
             FontFamilyCombo.SelectedIndex = FindComboIndex(FontFamilyCombo, config.DefaultFontFamily);
             FontColorCombo.SelectedIndex = FindComboIndex(FontColorCombo, config.DefaultFontColor);
+            ImagePositionCombo.SelectedIndex = (int)config.DefaultImagePosition;
+            AnchorTextCheckbox.IsChecked = config.AnchorTextToImage;
         }
 
         // Re-sort device list when a new device is added
@@ -274,8 +285,11 @@ namespace MessageBroadcast.Sender
                 DeviceName = _localDevice.Name,
                 Text = text,
                 FontSize = (int)FontSizeSlider.Value,
-                DisplaySeconds = (int)DisplayTimeSlider.Value,
+                DisplaySeconds = DisplayTimeSlider.Value,
+                FadeoutTimeSeconds = FadeoutTimeSlider.Value,
                 Position = (MessagePosition)PositionCombo.SelectedIndex,
+                ImagePosition = (MessagePosition)ImagePositionCombo.SelectedIndex,
+                AnchorTextToImage = AnchorTextCheckbox.IsChecked,
                 FontFamily = selectedFont,
                 FontColor = selectedColor,
                 SoundData = _selectedSoundData,
@@ -295,6 +309,7 @@ namespace MessageBroadcast.Sender
         {
             var type = MessageContentType.None;
 
+            // Use bitwise ORs because it's a flag enum
             if (!string.IsNullOrEmpty(MessageInput.Text.Trim())) type |= MessageContentType.Text;
             if (_selectedImageData != null) type |= MessageContentType.Image;
             if (_selectedSoundData != null) type |= MessageContentType.Sound;
@@ -587,6 +602,20 @@ namespace MessageBroadcast.Sender
         {
             _selectedImageData = null;
             ImageFileLabel.Text = "No image selected";
+        }
+
+        private void DisplayTimeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (DisplayTimeSlider.Value <= 5)
+            {
+                DisplayTimeSlider.TickFrequency = 0.1;
+            }
+            else
+            {
+                // Snap to nearest whole number when past threshold
+                DisplayTimeSlider.Value = Math.Round(e.NewValue, MidpointRounding.AwayFromZero); // Use conventional rounding
+                DisplayTimeSlider.TickFrequency = 1.0;
+            }
         }
     }
 }

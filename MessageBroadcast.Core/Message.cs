@@ -31,8 +31,11 @@ namespace MessageBroadcast.Core
         public int FontSize { get; set; } = 36;
         public string FontFamily { get; set; } = "Segoe UI";
         public string FontColor { get; set; } = "#FFFFFF";
-        public int DisplaySeconds { get; set; } = 5; // How long the message should display for
+        public double DisplaySeconds { get; set; } = 5.0; // How long the message should display for
+        public double FadeoutTimeSeconds { get; set; } = 1.0; // How long should the fadeout animation last after DisplaySeconds has passed
         public MessagePosition Position { get; set; } = MessagePosition.Center; // Where should the message display on the screen
+        public MessagePosition ImagePosition { get; set; } = MessagePosition.Center; // Where should the image display on the screen
+        public bool? AnchorTextToImage { get; set; } = false; // Whether or not the position of the text should be relative to the image (if one is present)
         public static int MaxLength { get; } = 32_000_000; // 32MB for messsage and any payload (image/audio)
         public static int MaxLengthDisplay => MaxLength / 1_000_000; // Bytes => MB
     }

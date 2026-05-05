@@ -10,8 +10,12 @@ namespace MessageBroadcast.Core
         public int DefaultFontSize { get; set; } = 36;
         public string DefaultFontFamily { get; set; } = "Segoe UI";
         public string DefaultFontColor { get; set; } = "#FFFFFF";
-        public int DefaultDisplaySeconds { get; set; } = 5;
+        public double DefaultDisplaySeconds { get; set; } = 5.0;
+        public double FadeoutTimeSeconds { get; set; } = 1.0;
         public MessagePosition DefaultPosition { get; set; } = MessagePosition.Center;
+        public MessagePosition DefaultImagePosition { get; set; } = MessagePosition.Center;
+        public bool AnchorTextToImage { get; set; } = false;
+
 
         // The version number that the user skipped
         // If this is the latest version, do not prompt to update

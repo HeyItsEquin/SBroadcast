@@ -10,10 +10,6 @@
         MinHeight="200"
         Width="650"
         SizeToContent="Height">
-    <Window.Resources>
-
-    </Window.Resources>
-
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -157,13 +153,14 @@
                             </Grid.ColumnDefinitions>
                             <Slider Grid.Column="0"
                                     x:Name="DisplayTimeSlider"
-                                    Minimum="1" Maximum="30" Value="5"
-                                    TickFrequency="1" IsSnapToTickEnabled="True"/>
-                            <TextBlock Grid.Column="1" Text="{Binding ElementName=DisplayTimeSlider, Path=Value}"/>
+                                    Minimum="0.1" Maximum="30" Value="5.0"
+                                    TickFrequency="1" IsSnapToTickEnabled="True"
+                                    ValueChanged="DisplayTimeSlider_ValueChanged"/>
+                            <TextBlock Grid.Column="1" Text="{Binding ElementName=DisplayTimeSlider, Path=Value, StringFormat={}{0:F1}}"/>
                         </Grid>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="1" Margin="4,0,0,0">
+                    <StackPanel Grid.Column="1" Margin="0,0,4,0">
                         <TextBlock Text="Position"/>
                         <ComboBox x:Name="PositionCombo" SelectedIndex="4">
                             <ComboBoxItem Content="Top Left"/>
@@ -176,6 +173,47 @@
                             <ComboBoxItem Content="Bottom Center"/>
                             <ComboBoxItem Content="Bottom Right"/>
                         </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Margin="4,0,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                            <TextBlock Text="Anchor text to image" Margin="0,0,4,0"/>
+                            <TextBlock Text="&#xE9CE;"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       Foreground="Gray"
+                                       VerticalAlignment="Center">
+                                <TextBlock.ToolTip>
+                                    <ToolTip>
+                                        <TextBlock TextWrapping="Wrap" MaxWidth="400"
+                                                   Text="When enabled, if an image is present: the position of the text is relative to that of the image, wherever it may be on the screen"/>
+                                    </ToolTip>
+                                </TextBlock.ToolTip>
+                            </TextBlock>
+                        </StackPanel>
+                        <CheckBox x:Name="AnchorTextCheckbox"/>
+                    </StackPanel>
+                </Grid>
+
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                        <TextBlock Text="Fadeout Time (s)"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Slider Grid.Column="0"
+                                    x:Name="FadeoutTimeSlider"
+                                    Minimum="0.2" Maximum="2" Value="1"
+                                    TickFrequency="0.1" IsSnapToTickEnabled="True"/>
+                            <TextBlock Grid.Column="1" Text="{Binding ElementName=FadeoutTimeSlider, Path=Value, StringFormat={}{0:F1}}"/>
+                        </Grid>
                     </StackPanel>
                 </Grid>
 
@@ -313,6 +351,21 @@
                                     Content="Clear"
                                     Click="ImageClear_Click"/>
                         </Grid>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Margin="4,0,0,0">
+                        <TextBlock Text="Image Position"/>
+                        <ComboBox x:Name="ImagePositionCombo" SelectedIndex="4">
+                            <ComboBoxItem Content="Top Left"/>
+                            <ComboBoxItem Content="Top Center"/>
+                            <ComboBoxItem Content="Top Right"/>
+                            <ComboBoxItem Content="Middle Left"/>
+                            <ComboBoxItem Content="Center"/>
+                            <ComboBoxItem Content="Middle Right"/>
+                            <ComboBoxItem Content="Bottom Left"/>
+                            <ComboBoxItem Content="Bottom Center"/>
+                            <ComboBoxItem Content="Bottom Right"/>
+                        </ComboBox>
                     </StackPanel>
                 </Grid>
             </StackPanel>
