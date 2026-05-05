@@ -120,6 +120,12 @@ namespace MessageBroadcast.Sender
                 Visible = true,
                 Text = "SBroadcast"
             };
+            _trayIcon.MouseDoubleClick += (_, _) =>
+            {
+                _mainWindow!.Show();
+                _mainWindow!.WindowState = WindowState.Normal;
+                _mainWindow!.Activate();
+            };
 
             var menu = new ContextMenuStrip();
 
