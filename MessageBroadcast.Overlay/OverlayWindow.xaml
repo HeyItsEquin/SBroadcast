@@ -22,5 +22,11 @@
                 <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="2"/>
             </TextBlock.Effect>
         </TextBlock>
+        <Image x:Name="ImageDisplay"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center"
+               Visibility="Hidden">
+            
+        </Image>
     </Grid>
 </Window>

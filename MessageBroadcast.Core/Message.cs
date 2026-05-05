@@ -11,7 +11,10 @@ namespace MessageBroadcast.Core
         Text,
         Image,
         Sound,
-        TextWithSound
+        TextWithSound,
+        TextWithImage,
+        ImageWithSound,
+        TextWithImageWithSound
     }
 
     public class Message

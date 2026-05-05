@@ -13,9 +13,6 @@ using VerticalAlignment = System.Windows.VerticalAlignment;
 
 namespace MessageBroadcast.Overlay
 {
-    /// <summary>
-    /// Interaction logic for OverlayWindow.xaml
-    /// </summary>
     public partial class OverlayWindow : Window
     {
         private CancellationTokenSource? _hideCts;
