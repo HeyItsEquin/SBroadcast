@@ -338,7 +338,6 @@ namespace MessageBroadcast.Sender
             }
 
             _selectedSoundData = File.ReadAllBytes(dialog.FileName);
-            // Unre
             _selectedSoundFormat = Path.GetExtension(dialog.FileName).TrimStart('.').ToLower();
             SoundFileLabel.Text = Path.GetFileName(dialog.FileName);
         }
