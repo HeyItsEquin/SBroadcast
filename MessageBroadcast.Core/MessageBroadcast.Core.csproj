@@ -4,12 +4,17 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
 		<UseWPF>true</UseWPF>
-		<OutputPath>..\$(Configuration)</OutputPath>
+		<GenerateDependencyFile>false</GenerateDependencyFile>
+		<GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>
+		<OutputPath>..\$(Configuration)\SBroadcast-$(Version)\runtime</OutputPath>
+		<PublishDir>..\Publish\SBroadcast-$(Version)\runtime</PublishDir>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
 		<DebugType>none</DebugType>
 		<DebugSymbols>false</DebugSymbols>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+		<CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
 	</PropertyGroup>
 	
     <ItemGroup>

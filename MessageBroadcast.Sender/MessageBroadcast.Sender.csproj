@@ -11,8 +11,8 @@
 		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-		<OutputPath>..\$(Configuration)\SBroadcast-$(Version)</OutputPath>
-		<PublishDir>..\Publish\SBroadcast-$(Version)</PublishDir>
+		<OutputPath>..\$(Configuration)\SBroadcast-$(Version)\runtime</OutputPath>
+		<PublishDir>..\Publish\SBroadcast-$(Version)\runtime</PublishDir>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">

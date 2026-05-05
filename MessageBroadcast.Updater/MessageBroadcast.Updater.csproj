@@ -12,7 +12,8 @@
 		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-		<OutputPath>..\$(Configuration)\SBroadcast-$(Version)</OutputPath>
+		<OutputPath>..\$(Configuration)\SBroadcast-$(Version)\runtime</OutputPath>
+		<PublishDir>..\Publish\SBroadcast-$(Version)\runtime</PublishDir>
 		<ApplicationIcon>..\Assets\app.ico</ApplicationIcon>
     </PropertyGroup>
 
@@ -29,5 +30,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\MessageBroadcast.Core\MessageBroadcast.Core.csproj" />
+		<ExcludeFromSingleFile Include="MessageBroadcast.Core.dll" />
 	</ItemGroup>
 </Project>
