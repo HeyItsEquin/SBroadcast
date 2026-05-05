@@ -1,6 +1,7 @@
 ﻿<Window x:Class="MessageBroadcast.Overlay.OverlayWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:MessageBroadcast.Overlay"
         AllowsTransparency="True"
         Background="Transparent"
         WindowStyle="None"
@@ -8,6 +9,9 @@
         IsHitTestVisible="False"
         WindowState="Maximized"
         ShowInTaskbar="False">
+    <Window.Resources>
+        <local:MultiplyConverter x:Key="MultiplyConverter"/>
+    </Window.Resources>
     <Grid>
         <TextBlock x:Name="MessageText"
                    Foreground="White"
@@ -22,11 +26,33 @@
                 <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="2"/>
             </TextBlock.Effect>
         </TextBlock>
-        <Image x:Name="ImageDisplay"
-               HorizontalAlignment="Center"
-               VerticalAlignment="Center"
-               Visibility="Hidden">
-            
-        </Image>
+
+        <Grid x:Name="ImageContainer"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center">
+            <Image x:Name="ImageDisplay"
+                   Stretch="Uniform"
+                   MaxWidth="{Binding RelativeSource={RelativeSource AncestorType=Window},
+                              Path=ActualWidth, Converter={StaticResource MultiplyConverter},
+                              ConverterParameter=0.75}"
+                   MaxHeight="{Binding RelativeSource={RelativeSource AncestorType=Window},
+                               Path=ActualHeight, Converter={StaticResource MultiplyConverter},
+                               ConverterParameter=0.75}"
+                   Visibility="Hidden"/>
+
+            <TextBlock x:Name="AnchoredMessageText"
+                       Foreground="White"
+                       FontSize="68"
+                       FontWeight="Bold"
+                       FontFamily="Trebuchet MS"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       TextWrapping="Wrap"
+                       Visibility="Hidden">
+                <TextBlock.Effect>
+                    <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="2"/>
+                </TextBlock.Effect>
+            </TextBlock>
+        </Grid>
     </Grid>
 </Window>

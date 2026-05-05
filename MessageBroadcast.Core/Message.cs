@@ -6,15 +6,17 @@ using System.Threading.Tasks;
 
 namespace MessageBroadcast.Core
 {
+    [Flags]
     public enum MessageContentType
     {
-        Text,
-        Image,
-        Sound,
-        TextWithSound,
-        TextWithImage,
-        ImageWithSound,
-        TextWithImageWithSound
+        None = 0,
+        Text = 1,
+        Image = 2,
+        Sound = 4,
+        TextWithImage = Text | Image,
+        TextWithSound = Text | Sound,
+        ImageWithSound = Image | Sound,
+        TextWithImageWithSound = Text | Image | Sound
     }
 
     public class Message

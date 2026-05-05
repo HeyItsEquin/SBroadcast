@@ -18,7 +18,7 @@ namespace MessageBroadcast.Core
         {
             var current = Assembly.GetEntryAssembly()!.GetName().Version!;
 
-            var root = GetLatestReleaseInfo(current);
+            var root = await GetLatestReleaseInfo(current);
 
             // Get tag name of latest release
             // Release tag format: vX.X.X (v1.2.1)
@@ -44,7 +44,7 @@ namespace MessageBroadcast.Core
             return null;
         }
 
-        private static async Task<JsonDocument?> GetLatestReleaseInfo(Version current)
+        private static async Task<JsonElement> GetLatestReleaseInfo(Version current)
         {
             using var client = new HttpClient();
             // Github's API will reject requests without this header

@@ -2,10 +2,8 @@
 
 namespace MessageBroadcast.Core
 {
-    // TODO: Implement this
-    public class ImageTransfer
+    public static class ImageTransfer
     {
-        private byte[]? _imageData;
-
+        
     }
 }

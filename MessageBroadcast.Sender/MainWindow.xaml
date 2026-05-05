@@ -269,7 +269,8 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Column="0">
+                    <StackPanel Grid.Column="0"
+                                Margin="0,0,4,0">
                         <TextBlock x:Name="SoundFileLabel"
                                    Text="No sound selected"
                                    VerticalAlignment="Center"
@@ -288,6 +289,29 @@
                             <Button Grid.Column="1"
                                     Content="Clear"
                                     Click="SoundClear_Click"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1"
+                                Margin="4,0,4,0">
+                        <TextBlock x:Name="ImageFileLabel"
+                                   Text="No image selected"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,0,4"
+                                   Foreground="Gray"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Button Grid.Column="0"
+                                    Content="Browse"
+                                    Margin="0,0,8,0"
+                                    Click="ImageBrowse_Click"/>
+                            <Button Grid.Column="1"
+                                    Content="Clear"
+                                    Click="ImageClear_Click"/>
                         </Grid>
                     </StackPanel>
                 </Grid>

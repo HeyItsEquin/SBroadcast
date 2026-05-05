@@ -24,6 +24,8 @@ namespace MessageBroadcast.Sender
         private byte[]? _selectedSoundData;
         private string? _selectedSoundFormat;
 
+        private byte[]? _selectedImageData;
+
         private bool _isEditingName = false;
 
         public MainWindow()
@@ -257,7 +259,7 @@ namespace MessageBroadcast.Sender
             }
 
             var text = MessageInput.Text.Trim();
-            if (string.IsNullOrEmpty(text) && _selectedSoundData == null)
+            if (string.IsNullOrEmpty(text) && _selectedSoundData == null && _selectedImageData == null)
             {
                 MessageBox.Show("Message must have some content.");
                 return;
@@ -278,9 +280,8 @@ namespace MessageBroadcast.Sender
                 FontColor = selectedColor,
                 SoundData = _selectedSoundData,
                 SoundFormat = _selectedSoundFormat,
-                ContentType = _selectedSoundData != null
-                    ? (string.IsNullOrEmpty(text) ? MessageContentType.Sound : MessageContentType.TextWithSound)
-                    : MessageContentType.Text
+                ImageData = _selectedImageData,
+                ContentType = GetMessageType()
             };
 
             var success = await _sender.SendMessageAsync(target, message);
@@ -288,6 +289,17 @@ namespace MessageBroadcast.Sender
                 MessageInput.Text = string.Empty;
             else
                 MessageBox.Show($"Failed to send to {target.PreferredName}. They may have gone offline.");
+        }
+
+        private MessageContentType GetMessageType()
+        {
+            var type = MessageContentType.None;
+
+            if (!string.IsNullOrEmpty(MessageInput.Text.Trim())) type |= MessageContentType.Text;
+            if (_selectedImageData != null) type |= MessageContentType.Image;
+            if (_selectedSoundData != null) type |= MessageContentType.Sound;
+
+            return type;
         }
 
         private void MessageInput_KeyDown(object sender, KeyEventArgs e)
@@ -331,35 +343,6 @@ namespace MessageBroadcast.Sender
             {
                 Mouse.OverrideCursor = null;
             }
-        }
-
-        private void SoundBrowse_Click(object sender, RoutedEventArgs e)
-        {
-            var dialog = new Microsoft.Win32.OpenFileDialog
-            {
-                Filter = "Audio Files|*.mp3;*.wav;*.m4a|All Files|*.*",
-                Title = "Select a sound file"
-            };
-
-            if (dialog.ShowDialog() != true) return;
-
-            var fileInfo = new FileInfo(dialog.FileName);
-            if (fileInfo.Length > Message.MaxLength)
-            {
-                MessageBox.Show($"Sound file must be under {Message.MaxLengthDisplay}MB.");
-                return;
-            }
-
-            _selectedSoundData = File.ReadAllBytes(dialog.FileName);
-            _selectedSoundFormat = Path.GetExtension(dialog.FileName).TrimStart('.').ToLower();
-            SoundFileLabel.Text = Path.GetFileName(dialog.FileName);
-        }
-
-        private void SoundClear_Click(object sender, RoutedEventArgs e)
-        {
-            _selectedSoundData = null;
-            _selectedSoundFormat = null;
-            SoundFileLabel.Text = "No sound selected";
         }
 
         protected override void OnClosed(EventArgs e)
@@ -547,6 +530,63 @@ namespace MessageBroadcast.Sender
             ConfigStore.Instance.UpdateDeviceConfig(device.Id, nameof(DeviceConfig.Favorite), device.IsFavorite);
 
             RefreshDeviceOrder();
+        }
+
+        private void SoundBrowse_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Audio Files|*.mp3;*.wav;*.m4a|All Files|*.*",
+                Title = "Select a sound file"
+            };
+
+            if (dialog.ShowDialog() != true) return;
+
+            var fileInfo = new FileInfo(dialog.FileName);
+            if (fileInfo.Length > Message.MaxLength)
+            {
+                MessageBox.Show($"Sound file must be under {Message.MaxLengthDisplay}MB.");
+                return;
+            }
+
+            _selectedSoundData = File.ReadAllBytes(dialog.FileName);
+            // Unreliable, but it works
+            _selectedSoundFormat = Path.GetExtension(dialog.FileName).TrimStart('.').ToLower();
+            SoundFileLabel.Text = Path.GetFileName(dialog.FileName);
+        }
+
+        private void SoundClear_Click(object sender, RoutedEventArgs e)
+        {
+            _selectedSoundData = null;
+            _selectedSoundFormat = null;
+            SoundFileLabel.Text = "No sound selected";
+        }
+
+        private void ImageBrowse_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Image Files|*.jpg;*.jpeg;*.jfif;*.png;*.gif;*.webp|All Files|*.*",
+                Title = "Select a sound file"
+            };
+
+            if (dialog.ShowDialog() != true) return;
+
+            var fileInfo = new FileInfo(dialog.FileName);
+            if (fileInfo.Length > Message.MaxLength)
+            {
+                MessageBox.Show($"Image file must be under {Message.MaxLengthDisplay}MB.");
+                return;
+            }
+
+            _selectedImageData = File.ReadAllBytes(dialog.FileName);
+            ImageFileLabel.Text = Path.GetFileName(dialog.FileName);
+        }
+
+        private void ImageClear_Click(object sender, RoutedEventArgs e)
+        {
+            _selectedImageData = null;
+            ImageFileLabel.Text = "No image selected";
         }
     }
 }
