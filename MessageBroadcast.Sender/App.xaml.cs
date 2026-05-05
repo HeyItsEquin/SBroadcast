@@ -143,9 +143,9 @@ namespace MessageBroadcast.Sender
             var openSenderItem = new ToolStripMenuItem("Open");
             openSenderItem.Click += (_, _) =>
             {
-                _mainWindow.Show();
-                _mainWindow.WindowState = WindowState.Normal;
-                _mainWindow.Activate();
+                _mainWindow!.Show();
+                _mainWindow!.WindowState = WindowState.Normal;
+                _mainWindow!.Activate();
             };
 
             menu.Items.Add(openSenderItem);
