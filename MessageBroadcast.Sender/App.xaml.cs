@@ -10,6 +10,7 @@ using NotifyIcon = System.Windows.Forms.NotifyIcon;
 using ContextMenuStrip = System.Windows.Forms.ContextMenuStrip;
 using ToolStripMenuItem = System.Windows.Forms.ToolStripMenuItem;
 using ToolStripSeparator = System.Windows.Forms.ToolStripSeparator;
+using System.Windows.Documents;
 
 namespace MessageBroadcast.Sender
 {
@@ -21,6 +22,13 @@ namespace MessageBroadcast.Sender
         private NotifyIcon? _trayIcon;
         private MainWindow? _mainWindow;
         private readonly AudioPlayer _audioPlayer = new();
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            StopCurrentAudio();
+            _trayIcon!.Visible = false;
+            base.OnExit(e);
+        }
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -111,6 +119,13 @@ namespace MessageBroadcast.Sender
             });
         }
 
+        public void CloseApp()
+        {
+            StopCurrentAudio();
+            _trayIcon!.Visible = false;
+            Shutdown();
+        }
+
         private void SetupTrayIcon()
         {
             // Create an icon in the system tray with various options
@@ -136,6 +151,12 @@ namespace MessageBroadcast.Sender
                 Logger.Log("[SND] Audio stopped via tray item");
             };
 
+            var closeMessageItem = new ToolStripMenuItem("Close Message");
+            closeMessageItem.Click += (_, _) =>
+            {
+                StopCurrentMessage(true);
+            };
+
             var startupItem = new ToolStripMenuItem("Start with Windows")
             {
                 Checked = IsRegisteredForStartup(),
@@ -156,20 +177,16 @@ namespace MessageBroadcast.Sender
             };
 
             menu.Items.Add(openSenderItem);
+            menu.Items.Add(closeMessageItem);
             menu.Items.Add(stopAudioItem);
             menu.Items.Add(startupItem);
             menu.Items.Add(new ToolStripSeparator());
-            menu.Items.Add("Exit", null, (_, _) =>
-            {
-                StopCurrentAudio();
-                _trayIcon!.Visible = false;
-                Shutdown();
-            });
+            menu.Items.Add("Exit", null, (_, _) => Shutdown());
 
             _trayIcon.ContextMenuStrip = menu;
         }
 
-        private void StopCurrentAudio()
+        public void StopCurrentAudio()
         {
             Logger.Log("[SND] StopCurrentAudio called");
             Dispatcher.Invoke(() =>
@@ -177,6 +194,12 @@ namespace MessageBroadcast.Sender
                 _overlay?.StopAudio();
                 _audioPlayer.Stop();
             });
+        }
+
+        public void StopCurrentMessage(bool stopAudio)
+        {
+            if (stopAudio) StopCurrentAudio();
+            _overlay?.Close();
         }
 
         // Show update prompt as modal window

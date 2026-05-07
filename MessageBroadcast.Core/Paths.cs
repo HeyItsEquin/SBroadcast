@@ -27,6 +27,7 @@ namespace MessageBroadcast.Core
         public static string DeviceUuidPath => Path.Combine(AppData, "device.uuid");
         public static string PreferencesPath => Path.Combine(AppData, "preferences.json");
         public static string DeviceConfigsPath => Path.Combine(AppData, "device_configs.json");
+        public static string GroupsPath => Path.Combine(AppData, "groups.json");
         public static string LogPath => Path.Combine(AppData, "log.txt");
     }
 }

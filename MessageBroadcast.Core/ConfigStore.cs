@@ -1,6 +1,8 @@
 ﻿using System.Text.Json;
 using System.IO;
 using System.Text.Json.Serialization;
+using NAudio.CoreAudioApi;
+using System.Diagnostics;
 
 namespace MessageBroadcast.Core
 {
@@ -38,12 +40,14 @@ namespace MessageBroadcast.Core
 
         private AppConfig _appConfig = new();
         private Dictionary<Guid, DeviceConfig> _deviceConfigs = new();
+        private List<GroupInfo> _groups = new();
 
         // After this is called, ConfigStore will be ready to pull from
         public void Load()
         {
             LoadPreferences();
             LoadDeviceConfigs();
+            LoadGroups();
         }
 
         // Write updated configs
@@ -51,6 +55,7 @@ namespace MessageBroadcast.Core
         {
             SavePreferences();
             SaveDeviceConfigs();
+            SaveGroups();
         }
 
         // Load settings from preferences.json
@@ -63,7 +68,7 @@ namespace MessageBroadcast.Core
                 if (!File.Exists(Paths.PreferencesPath))
                 {
                     _appConfig = new AppConfig();
-                    // TODO: Create preferences file when missing
+                    SavePreferences(); // Create file
                     Logger.Log("[MB] No preferences file found, using defaults");
                     return;
                 }
@@ -98,6 +103,80 @@ namespace MessageBroadcast.Core
             }
         }
 
+        // Load groups list from groups.json
+        public void LoadGroups()
+        {
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(Paths.GroupsPath)!);
+                
+                if (!File.Exists(Paths.GroupsPath))
+                {
+                    _groups = [];
+                    SaveGroups();
+                    Logger.Log($"[MB] No group configs found, using defaults");
+                    return;
+                }
+
+                var json = File.ReadAllText(Paths.GroupsPath);
+                var groupsDict = JsonSerializer.Deserialize<Dictionary<string, List<DeviceInfo>>>(json);
+                _groups = GroupsFromDict(groupsDict);
+                UpdateGroupMembers();
+                Logger.Log("[MB] Group configs loaded successfully");
+            }
+            catch (Exception ex)
+            {
+                Logger.Exception(ex, "[MB] Failed to load group configs");
+            }
+        }
+
+        public void SaveGroups()
+        {
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(Paths.GroupsPath)!);
+
+                var json = JsonSerializer.Serialize(GroupsDict(), new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+
+                File.WriteAllText(Paths.GroupsPath, json);
+                Logger.Log("[MB] Group configs saved successfully");
+            }
+            catch (Exception ex)
+            {
+                Logger.Exception(ex, "[MB] Failed to save group configs");
+            }
+        }
+
+        // Updates group member's info with updated values from _deviceConfigs
+        private void UpdateGroupMembers()
+        {
+            _groups.ForEach(g => g.GroupMembers.ForEach(m =>
+            {
+                if (_deviceConfigs.TryGetValue(m.Id, out var config))
+                    m.PreferredName = config.Nickname;
+            })); // Gotta love nested ForEach...
+        }
+
+        // Turn groups into a dictionary
+        private Dictionary<string, List<DeviceInfo>> GroupsDict()
+        {
+            return _groups.ToDictionary(g => g.GroupName, g => g.GroupMembers);
+        }
+
+        // Turn dictionary of group name and group member's IDs into list of GroupInfo objects
+        private List<GroupInfo> GroupsFromDict(Dictionary<string, List<DeviceInfo>>? groupsDict)
+        {
+            return [..groupsDict?.Select(kvp => new GroupInfo
+            {
+                GroupName = kvp.Key,
+                GroupMembers = kvp.Value
+            }) ?? []]; // I hate C# sometimes because what is thisss
+        }
+
+        // Load per-device settings from device_configs.json
         public void LoadDeviceConfigs()
         {
             try
@@ -107,7 +186,7 @@ namespace MessageBroadcast.Core
                 if (!File.Exists(Paths.DeviceConfigsPath))
                 {
                     _deviceConfigs = new Dictionary<Guid, DeviceConfig>();
-                    Logger.Log("[MB] No device config file found, using defaults");
+                    Logger.Log("[MB] No device configs found, using defaults");
                     return;
                 }
 
@@ -152,6 +231,7 @@ namespace MessageBroadcast.Core
         public void SetDeviceConfig(Guid deviceId, DeviceConfig config)
         {
             _deviceConfigs[deviceId] = config;
+            UpdateGroupMembers();
             SaveDeviceConfigs();
         }
 
@@ -159,6 +239,7 @@ namespace MessageBroadcast.Core
         public void RemoveDeviceConfig(Guid deviceId)
         {
             _deviceConfigs.Remove(deviceId);
+            UpdateGroupMembers();
             SaveDeviceConfigs();
         }
 
@@ -202,6 +283,17 @@ namespace MessageBroadcast.Core
             var config = GetAppConfig();
             prop.SetValue(config, value);
             SetAppConfig(config);
+        }
+
+        public List<GroupInfo> GetGroups()
+        {
+            return _groups;
+        }
+
+        public void SetGroups(List<GroupInfo> groups)
+        {
+            _groups = groups;
+            SaveGroups();
         }
     }
 

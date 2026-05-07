@@ -1,0 +1,55 @@
+﻿<Window x:Class="MessageBroadcast.Sender.CreateGroup"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MessageBroadcast.Sender"
+        mc:Ignorable="d"
+        SizeToContent="WidthAndHeight"
+        Title="Create New">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <Grid Margin="8" Grid.Row="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0"
+                       Text="Group Name"
+                       Foreground="Gray"
+                       Margin="0,0,0,2"/>
+            <TextBox Grid.Row="1"
+                     x:Name="GroupNameInput"
+                     Width="200"
+                     Margin="0,2,0,0"/>
+        </Grid>
+        
+        <Grid Margin="8,0,8,8" Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="1"
+                    x:Name="CancelButton"
+                    Content="Cancel"
+                    Margin="0,0,4,0"
+                    Padding="4"
+                    Width="60"
+                    Click="CancelButton_Click"/>
+            <Button Grid.Column="2"
+                    x:Name="AcceptButton"
+                    Content="Accept"
+                    Margin="4,0,0,0"
+                    Padding="4"
+                    Width="60"
+                    Click="AcceptButton_Click"/>
+        </Grid>
+    </Grid>
+</Window>

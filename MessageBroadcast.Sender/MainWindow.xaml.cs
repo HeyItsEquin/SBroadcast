@@ -1,9 +1,11 @@
 ﻿using MessageBroadcast.Core;
+using MessageBroadcast.Sender.Controls;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Printing;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -12,6 +14,21 @@ using System.Windows.Media;
 
 namespace MessageBroadcast.Sender
 {
+    public class PercentageConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            var percentage = Double.Parse(parameter.ToString()!);
+            return (double)value * percentage;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            var percentage = Double.Parse(parameter.ToString()!);
+            return (double)value / percentage;
+        }
+    }
+
     public partial class MainWindow : Window
     {
         private readonly DeviceInfo _localDevice;
@@ -19,6 +36,8 @@ namespace MessageBroadcast.Sender
         private readonly MessageSender _sender;
         private CancellationTokenSource _cts = new();
         private readonly Dictionary<Guid, DeviceInfo> _devices = new();
+        private ObservableCollection<GroupInfo> _groups = new();
+        private readonly CollectionViewSource _groupsViewSource = new();
         private readonly ObservableCollection<DeviceInfo> _deviceList = new();
         private readonly CollectionViewSource _deviceViewSource = new();
 
@@ -26,8 +45,6 @@ namespace MessageBroadcast.Sender
         private string? _selectedSoundFormat;
 
         private byte[]? _selectedImageData;
-
-        private bool _isEditingName = false;
 
         public MainWindow()
         {
@@ -49,6 +66,14 @@ namespace MessageBroadcast.Sender
                 new SortDescription(nameof(DeviceInfo.PreferredName), ListSortDirection.Ascending));
 
             DeviceList.ItemsSource = _deviceViewSource.View;
+
+            _groups = new ObservableCollection<GroupInfo>(ConfigStore.Instance.GetGroups());
+
+            _groupsViewSource.Source = _groups;
+            _groupsViewSource.SortDescriptions.Add(
+                new SortDescription(nameof(GroupInfo.GroupName), ListSortDirection.Ascending));
+
+            GroupsList.ItemsSource = _groupsViewSource.View;
 
             // Event handlers for updating config
             FontSizeSlider.ValueChanged += (_, _) => 
@@ -77,11 +102,64 @@ namespace MessageBroadcast.Sender
             _discovery.Start();
         }
 
+        protected override async void OnContentRendered(EventArgs e)
+        {
+            base.OnContentRendered(e);
+
+            await Task.Delay(250);
+            // Setup device list on startup
+            await QueryNewDevices();
+        }
+
         protected override void OnClosing(CancelEventArgs e)
         {
-            e.Cancel = true;
-            Hide();
-            base.OnClosing(e);
+            if (Keyboard.IsKeyDown(Key.LeftShift))
+            {
+                Application.Current.Shutdown();
+                base.OnClosing(e);
+            }
+            else
+            {
+                e.Cancel = true;
+                Hide();
+                base.OnClosing(e);
+            }
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            _cts.Cancel();
+            _discovery.Dispose();
+            Application.Current.Shutdown();
+            base.OnClosed(e);
+        }
+
+        private async Task QueryNewDevices()
+        {
+            try
+            {
+                _cts = new CancellationTokenSource();
+
+                // Scan for new devices
+                var discovered = await _discovery.ScanOnceAsync(_cts.Token);
+                var discoveredIds = discovered.Select(d => d.Id).ToHashSet();
+
+                Dispatcher.Invoke(() =>
+                {
+                    // Remove any device from list not present in latest scan
+                    var toRemove = _devices.Values
+                        .Where(d => !discoveredIds.Contains(d.Id))
+                        .ToList();
+
+                    foreach (var device in toRemove)
+                    {
+                        _devices.Remove(device.Id);
+                        _deviceList.Remove(device);
+                        Debug.WriteLine($"[SND] Removed stale device: {device.Name}");
+                    }
+                });
+            }
+            catch (OperationCanceledException) { }
         }
 
         // Load and apply application configs
@@ -150,6 +228,18 @@ namespace MessageBroadcast.Sender
             });
         }
 
+        private MessageContentType GetMessageType()
+        {
+            var type = MessageContentType.None;
+
+            // Use bitwise ORs because it's a flag enum
+            if (!string.IsNullOrEmpty(MessageInput.Text.Trim())) type |= MessageContentType.Text;
+            if (_selectedImageData != null) type |= MessageContentType.Image;
+            if (_selectedSoundData != null) type |= MessageContentType.Sound;
+
+            return type;
+        }
+
         private void DeviceContextMenu_Opened(object sender, RoutedEventArgs e)
         {
             if (DeviceList.SelectedItem is not DeviceInfo device)
@@ -172,6 +262,16 @@ namespace MessageBroadcast.Sender
                 });
                 return;
             }
+
+            AddToGroupMenuItem.Items.Clear();
+            var createNewGroup = new MenuItem
+            {
+                Header = "Create New...",
+                IsEnabled = true
+            };
+            createNewGroup.Click += CreateNewGroupItem_Click;
+            AddToGroupMenuItem.Items.Add(createNewGroup); // Always allow the user to create a new group
+            AddToGroupMenuItem.Items.Add(new Separator());
 
             // List all advertised addresses for user to select
             foreach (var ip in device.AdvertisedIps)
@@ -208,6 +308,29 @@ namespace MessageBroadcast.Sender
                 };
 
                 PreferredIpMenuItem.Items.Add(ipItem);
+            }
+            
+            // List all groups that can be added to
+            foreach (var group in _groups)
+            {
+                var groupItem = new MenuItem
+                {
+                    Header = group.GroupName,
+                    IsCheckable = true,
+                    IsChecked = group.GroupMembers.Contains(device),
+                };
+
+                groupItem.Click += (sender, e) =>
+                {
+                    if (group.GroupMembers.Contains(device))
+                    {
+                        e.Handled = true;
+                        return;
+                    }
+
+                    group.GroupMembers.Add(device);
+                    e.Handled = true;
+                };
             }
         }
 
@@ -261,18 +384,6 @@ namespace MessageBroadcast.Sender
                 MessageBox.Show($"Failed to send to {target.PreferredName}. They may have gone offline.");
         }
 
-        private MessageContentType GetMessageType()
-        {
-            var type = MessageContentType.None;
-
-            // Use bitwise ORs because it's a flag enum
-            if (!string.IsNullOrEmpty(MessageInput.Text.Trim())) type |= MessageContentType.Text;
-            if (_selectedImageData != null) type |= MessageContentType.Image;
-            if (_selectedSoundData != null) type |= MessageContentType.Sound;
-
-            return type;
-        }
-
         private void MessageInput_KeyDown(object sender, KeyEventArgs e)
         {
             // Submit messages via enter like HTML form
@@ -286,154 +397,26 @@ namespace MessageBroadcast.Sender
         private async void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
             Mouse.OverrideCursor = Cursors.Wait;
-            try
-            {
-                _cts = new CancellationTokenSource();
-
-                // Scan for new devices
-                var discovered = await _discovery.ScanOnceAsync(_cts.Token);
-                var discoveredIds = discovered.Select(d => d.Id).ToHashSet();
-
-                Dispatcher.Invoke(() =>
-                {
-                    // Remove any device from list not present in latest scan
-                    var toRemove = _devices.Values
-                        .Where(d => !discoveredIds.Contains(d.Id))
-                        .ToList();
-
-                    foreach (var device in toRemove)
-                    {
-                        _devices.Remove(device.Id);
-                        _deviceList.Remove(device);
-                        Debug.WriteLine($"[SND] Removed stale device: {device.Name}");
-                    }
-                });
-            }
-            catch (OperationCanceledException) { }
-            finally
-            {
-                Mouse.OverrideCursor = null;
-            }
-        }
-
-        protected override void OnClosed(EventArgs e)
-        {
-            _cts.Cancel();
-            _discovery.Dispose();
-            Application.Current.Shutdown();
-            base.OnClosed(e);
-        }
-
-        private void SetNicknameMenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            if (DeviceList.SelectedItem is not DeviceInfo device) return;
-
-            // Inline text editing, very annoying
-            Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, () =>
-            {
-                var container = DeviceList.ItemContainerGenerator
-                    .ContainerFromItem(device) as ListViewItem;
-                if (container == null) return;
-
-                var nameText = FindVisualChild<TextBlock>(container, "NameText");
-                var nameEdit = FindVisualChild<TextBox>(container, "NameEdit");
-
-                if (nameText == null || nameEdit == null) return;
-
-                _isEditingName = true;
-                nameText.Visibility = Visibility.Collapsed;
-                nameEdit.Visibility = Visibility.Visible;
-                nameEdit.Focus();
-                nameEdit.SelectAll();
-            });
+            await QueryNewDevices();
+            Mouse.OverrideCursor = null;
         }
 
         // Generic helper fn, don't look too hard into it
-        private T? FindVisualChild<T>(DependencyObject parent, string name) where T : FrameworkElement
+        private T? FindVisualChild<T>(DependencyObject parent) where T : FrameworkElement
         {
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
             {
                 var child = VisualTreeHelper.GetChild(parent, i);
 
-                if (child is T element && element.Name == name)
+                if (child is T element)
                     return element;
 
-                var result = FindVisualChild<T>(child, name);
+                var result = FindVisualChild<T>(child);
                 if (result != null)
                     return result;
             }
 
             return null;
-        }
-
-        private void NameEdit_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (!_isEditingName) return;
-            if (sender is not TextBox nameEdit) return;
-
-            if (e.Key == Key.Enter)
-            {
-                CommitNicknameEdit(nameEdit);
-                e.Handled = true;
-            }
-            else if (e.Key == Key.Escape)
-            {
-                CancelNicknameEdit(nameEdit);
-                e.Handled = true;
-            }
-        }
-
-        private void NameEdit_LostFocus(object sender, RoutedEventArgs e)
-        {
-            if (!_isEditingName) return;
-            if (sender is not TextBox nameEdit) return;
-            CancelNicknameEdit(nameEdit);
-        }
-
-        private void CommitNicknameEdit(TextBox nameEdit)
-        {
-            if (DeviceList.SelectedItem is not DeviceInfo device) return;
-
-            var container = DeviceList.ItemContainerGenerator
-                .ContainerFromItem(device) as ListViewItem;
-            if (container == null) return;
-
-            var nameText = FindVisualChild<TextBlock>(container, "NameText");
-            if (nameText == null) return;
-
-            var nickname = string.IsNullOrWhiteSpace(nameEdit.Text)
-                ? null
-                : nameEdit.Text.Trim();
-
-            device.PreferredName = nickname;
-
-            var config = ConfigStore.Instance.GetDeviceConfig(device.Id);
-            config.Nickname = nickname;
-            ConfigStore.Instance.SetDeviceConfig(device.Id, config);
-
-            nameEdit.Visibility = Visibility.Collapsed;
-            nameText.Visibility = Visibility.Visible;
-
-            _isEditingName = false;
-        }
-
-        private void CancelNicknameEdit(TextBox nameEdit)
-        {
-            if (DeviceList.SelectedItem is not DeviceInfo device) return;
-
-            var container = DeviceList.ItemContainerGenerator
-                .ContainerFromItem(device) as ListViewItem;
-            if (container == null) return;
-
-            var nameText = FindVisualChild<TextBlock>(container, "NameText");
-            if (nameText == null) return;
-
-            nameEdit.Text = device.PreferredName ?? device.Name;
-
-            nameEdit.Visibility = Visibility.Collapsed;
-            nameText.Visibility = Visibility.Visible;
-
-            _isEditingName = false;
         }
 
         private void FavoriteDeviceMenuItem_Click(object sender, RoutedEventArgs e)
@@ -572,6 +555,66 @@ namespace MessageBroadcast.Sender
                 DisplayTimeSlider.Value = Math.Round(e.NewValue, MidpointRounding.AwayFromZero); // Use conventional rounding
                 DisplayTimeSlider.TickFrequency = 1.0;
             }
+        }
+
+        private void SetNicknameMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (DeviceList.SelectedItem is not DeviceInfo device) return;
+
+            var container = DeviceList.ItemContainerGenerator
+                .ContainerFromItem(device) as ListViewItem;
+            if (container == null) return;
+
+            var editableTextBlock = FindVisualChild<EditableTextBlock>(container);
+            editableTextBlock?.BeginEdit();
+        }
+
+        private void EditableTextBlock_TextCommitted(object sender, string e)
+        {
+            if (sender is EditableTextBlock control &&
+                control.DataContext is DeviceInfo device)
+            {
+                var config = ConfigStore.Instance.GetDeviceConfig(device.Id);
+                config.Nickname = e;
+                ConfigStore.Instance.SetDeviceConfig(device.Id, config);
+            }
+        }
+
+        private void GroupNameEdit_TextCommitted(object sender, string e)
+        {
+            if (sender is EditableTextBlock control &&
+                control.DataContext is GroupInfo group)
+            {
+                if (_groups.Any(g => g.GroupName == e))
+                {
+                    MessageBox.Show("A group with that name already exists");
+                    return;
+                }
+                foreach (var g in _groups.Where(g => g.GroupName == group.GroupName))
+                {
+                    g.GroupName = e;
+                }
+                ConfigStore.Instance.SetGroups(new List<GroupInfo>(_groups));
+            }
+        }
+
+        private void CreateNewGroupItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (DeviceList.SelectedItem is not DeviceInfo dvc) return;
+
+            var prompt = new CreateGroup();
+            var result = prompt.ShowDialog() ?? false;
+
+            if (!result) return;
+
+            var group = prompt.group!;
+            group.GroupMembers.Add(dvc);
+
+            _groups.Add(group);
+            ConfigStore.Instance.SetGroups(new List<GroupInfo>(_groups));
+
+            e.Handled = true;
+            return;
         }
     }
 }

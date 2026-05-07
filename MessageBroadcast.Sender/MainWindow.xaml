@@ -5,100 +5,158 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MessageBroadcast.Sender"
+        xmlns:uc="clr-namespace:MessageBroadcast.Sender.Controls"
         mc:Ignorable="d"
         Title="SBroadcast"
         MinHeight="200"
         Width="650"
         SizeToContent="Height">
+    <Window.Resources>
+        <local:PercentageConverter x:Key="PercentageConverter"/>
+    </Window.Resources>
     <Grid Margin="16">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="200"/>
+            <RowDefinition Height="220"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
+        
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="65*"/>
+                <ColumnDefinition Width="35*"/>
+            </Grid.ColumnDefinitions>
 
-        <Grid Grid.Row="0" Margin="0,0,0,8">
-            <TextBlock Text="Devices on Network"
-                       FontWeight="Bold"
-                       VerticalAlignment="Center"/>
-            <Button Content="&#xE72C;"
-                    FontFamily="Segoe MDL2 Assets"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Center"
-                    Width="24" Height="24"
-                    FontSize="14"
-                    Padding="0"
-                    Click="RefreshButton_Click"/>
+            <Grid Grid.Column="0"
+                  Margin="0,0,4,8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0"
+                           Text="Devices On Network"
+                           FontWeight="Bold"
+                           VerticalAlignment="Center"
+                           Margin="4,0,0,4"/>
+                <Button Grid.Row="0"
+                        Content="&#xE72C;"
+                        FontFamily="Segoe MDL2 Assets"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Width="24" Height="24"
+                        FontSize="14"
+                        Padding="0"
+                        Click="RefreshButton_Click"
+                        Margin="0,0,0,4"/>
+
+                <ListView Grid.Row="1"
+                          x:Name="DeviceList"
+                          ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                          Padding="0,0,2,0">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Name" Width="{Binding ActualWidth, ElementName=DeviceList, Converter={StaticResource PercentageConverter}, ConverterParameter=0.33}">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="20"/>
+                                                <ColumnDefinition Width="auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       x:Name="StatusIcon"
+                                                       FontFamily="Segoe MDL2 Assets"
+                                                       Text="{Binding StatusIcon}"
+                                                       VerticalAlignment="Center"
+                                                       HorizontalAlignment="Left"
+                                                       ToolTip="{Binding StatusToolTip}"/>
+                                            <uc:EditableTextBlock Grid.Column="1"
+                                                                  Text="{Binding PreferredName, Mode=TwoWay}"
+                                                                  TextCommitted="EditableTextBlock_TextCommitted"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+
+                            <GridViewColumn Header="IP Address"
+                                DisplayMemberBinding="{Binding IpAddress}"
+                                Width="{Binding ActualWidth, ElementName=DeviceList, Converter={StaticResource PercentageConverter}, ConverterParameter=0.33}"/>
+                            <GridViewColumn Header="Last Seen"
+                                DisplayMemberBinding="{Binding LastSeenDisplay}"
+                                Width="{Binding ActualWidth, ElementName=DeviceList, Converter={StaticResource PercentageConverter}, ConverterParameter=0.33}"/>
+                        </GridView>
+                    </ListView.View>
+                    <ListView.ContextMenu>
+                        <ContextMenu Opened="DeviceContextMenu_Opened">
+                            <MenuItem Header="Preferred IP"
+                                      x:Name="PreferredIpMenuItem"/>
+
+                            <MenuItem Header="Set Nickname"
+                                      x:Name="SetNicknameMenuItem"
+                                      Click="SetNicknameMenuItem_Click"/>
+
+                            <MenuItem Header="Favorite"
+                                      x:Name="FavoriteDeviceMenuItem"
+                                      Click="FavoriteDeviceMenuItem_Click"/>
+
+                            <MenuItem Header="Block"
+                                      x:Name="BlockDeviceMenuItem"
+                                      Click="BlockDeviceMenuItem_Click"/>
+
+                            <MenuItem Header="Add to group"
+                                      x:Name="AddToGroupMenuItem"/>
+                        </ContextMenu>
+                    </ListView.ContextMenu>
+                </ListView>
+            </Grid>
+
+            <Grid Grid.Column="1"
+                  Margin="4,0,0,8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0"
+                      Height="24"
+                      Margin="4,0,0,4">
+                    <TextBlock Text="Groups"
+                               FontWeight="Bold"
+                               VerticalAlignment="Center"/>
+                </Grid>
+
+                <ListView Grid.Row="1"
+                          x:Name="GroupsList"
+                          Padding="0,0,2,0"
+                          ScrollViewer.HorizontalScrollBarVisibility="Hidden">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Name" Width="{Binding ActualWidth, ElementName=GroupsList, Converter={StaticResource PercentageConverter}, ConverterParameter=0.65}">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <uc:EditableTextBlock x:Name="GroupNameEdit"
+                                                              Text="{Binding GroupName, Mode=TwoWay}"
+                                                              TextCommitted="GroupNameEdit_TextCommitted"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+
+                            <GridViewColumn Header="Size"
+                                            Width="{Binding ActualWidth, ElementName=GroupsList, Converter={StaticResource PercentageConverter}, ConverterParameter=0.35}">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding MemberCount}"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </Grid>
         </Grid>
 
-        <ListView Grid.Row="1"
-          x:Name="DeviceList"
-          Margin="0,0,0,8">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Header="Name" Width="200">
-                        <GridViewColumn.CellTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="20"/>
-                                        <ColumnDefinition Width="auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0"
-                                               x:Name="StatusIcon"
-                                               FontFamily="Segoe MDL2 Assets"
-                                               Text="{Binding StatusIcon}"
-                                               VerticalAlignment="Center"
-                                               HorizontalAlignment="Left"
-                                               ToolTip="{Binding StatusToolTip}"/>
-                                    <TextBlock Grid.Column="1"
-                                               x:Name="NameText"
-                                               Text="{Binding PreferredName}"
-                                               VerticalAlignment="Center"/>
-                                    <TextBox Grid.Column="1"
-                                             x:Name="NameEdit"
-                                             Text="{Binding PreferredName, UpdateSourceTrigger=Explicit}"
-                                             Visibility="Collapsed"
-                                             VerticalContentAlignment="Center"
-                                             BorderThickness="1"
-                                             Padding="2,0,2,0"
-                                             LostFocus="NameEdit_LostFocus"
-                                             KeyDown="NameEdit_KeyDown"/>
-                                </Grid>
-                            </DataTemplate>
-                        </GridViewColumn.CellTemplate>
-                    </GridViewColumn>
-
-                    <GridViewColumn Header="IP Address"
-                            DisplayMemberBinding="{Binding IpAddress}"
-                            Width="140"/>
-                    <GridViewColumn Header="Last Seen"
-                            DisplayMemberBinding="{Binding LastSeenDisplay}"
-                            Width="120"/>
-                </GridView>
-            </ListView.View>
-            <ListView.ContextMenu>
-                <ContextMenu Opened="DeviceContextMenu_Opened">
-                    <MenuItem Header="Preferred IP"
-                              x:Name="PreferredIpMenuItem"/>
-
-                    <MenuItem Header="Set Nickname"
-                              x:Name="SetNicknameMenuItem"
-                              Click="SetNicknameMenuItem_Click"/>
-
-                    <MenuItem Header="Favorite"
-                              x:Name="FavoriteDeviceMenuItem"
-                              Click="FavoriteDeviceMenuItem_Click"/>
-
-                    <MenuItem Header="Block"
-                              x:Name="BlockDeviceMenuItem"
-                              Click="BlockDeviceMenuItem_Click"/>
-                </ContextMenu>
-            </ListView.ContextMenu>
-        </ListView>
-
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
@@ -118,7 +176,7 @@
                     VerticalAlignment="Stretch"/>
         </Grid>
 
-        <Expander Grid.Row="3"
+        <Expander Grid.Row="2"
                   Header="Message Options"
                   Margin="0,8,0,0">
             <StackPanel Margin="0,8,0,0">

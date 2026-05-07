@@ -1,0 +1,18 @@
+﻿<UserControl x:Class="MessageBroadcast.Sender.Controls.EditableTextBlock"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:MessageBroadcast.Sender.Controls"
+             x:Name="Root">
+    <Grid>
+        <TextBlock x:Name="TextBlockDisplay"
+                   Text="{Binding Text, ElementName=Root}"
+                   Visibility="Visible"/>
+        <TextBox x:Name="TextBoxEdit"
+                   Text="{Binding Text, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                   KeyDown="TextBoxEdit_KeyDown"
+                   LostFocus="TextBoxEdit_LostFocus"
+                   Visibility="Collapsed"/>
+    </Grid>
+</UserControl>

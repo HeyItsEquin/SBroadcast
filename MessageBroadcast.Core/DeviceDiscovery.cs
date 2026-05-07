@@ -67,7 +67,7 @@ namespace MessageBroadcast.Core
             // Some addresses/interfaces may be unusable for communication
             var validAddresses = GetUsableInterfaces()
                 .SelectMany(i => i.GetIPProperties().UnicastAddresses)
-                .Where(a => a.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                .Where(a => a.Address.AddressFamily == AddressFamily.InterNetwork)
                 .Select(a => a.Address)
                 .ToList();
 
