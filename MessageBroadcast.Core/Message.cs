@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 
 namespace MessageBroadcast.Core
 {
@@ -12,6 +13,7 @@ namespace MessageBroadcast.Core
         None = 0,
         Text = 1,
         Image = 2,
+        Video = 3,
         Sound = 4,
         TextWithImage = Text | Image,
         TextWithSound = Text | Sound,
@@ -26,6 +28,11 @@ namespace MessageBroadcast.Core
         public MessageContentType ContentType { get; set; } = MessageContentType.Text;
         public string Text { get; set; } = string.Empty;
         public byte[]? ImageData { get; set; } // Raw image data for when the message has an image
+        public byte[]? VideoData { get; set; } // Raw video data for when the message has a video
+        public string? VideoFormat { get; set; } // Video format (MP4, MOV, MKV, etc.)
+        public bool HideVideoWhenDone { get; set; }
+        public bool UseVideoLengthAsDisplayTime { get; set; }
+        public bool MuteVideo { get; set; } = false;
         public byte[]? SoundData { get; set; } // Raw sound data for when the message has audio 
         public string? SoundFormat { get; set; } // Audio format (WAV, MP3, etc.)
         public int FontSize { get; set; } = 36;
@@ -35,9 +42,13 @@ namespace MessageBroadcast.Core
         public double FadeoutTimeSeconds { get; set; } = 1.0; // How long should the fadeout animation last after DisplaySeconds has passed
         public MessagePosition Position { get; set; } = MessagePosition.Center; // Where should the message display on the screen
         public MessagePosition ImagePosition { get; set; } = MessagePosition.Center; // Where should the image display on the screen
-        public bool? AnchorTextToImage { get; set; } = false; // Whether or not the position of the text should be relative to the image (if one is present)
+        public bool AnchorTextToImage { get; set; } = false; // Whether or not the position of the text should be relative to the image (if one is present)
         public static int MaxLength { get; } = 32_000_000; // 32MB for messsage and any payload (image/audio)
         public static int MaxLengthDisplay => MaxLength / 1_000_000; // Bytes => MB
+
+        public bool ShouldRenderVideo() => ContentType.HasFlag(MessageContentType.Video) && VideoData != null;
+        public bool ShouldRenderImage() => ContentType.HasFlag(MessageContentType.Image) && ImageData != null;
+        public bool UseAnchoredText() => AnchorTextToImage && ImageData != null;
     }
 
     public enum MessagePosition

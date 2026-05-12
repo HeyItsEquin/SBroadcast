@@ -273,6 +273,11 @@
                             <TextBlock Grid.Column="1" Text="{Binding ElementName=FadeoutTimeSlider, Path=Value, StringFormat={}{0:F1}}"/>
                         </Grid>
                     </StackPanel>
+
+                    <StackPanel Grid.Column="2" Margin="4,0,0,0">
+                        <TextBlock Text="Use video length as display time" Margin="0,0,0,4"/>
+                        <CheckBox x:Name="VideoLengthAsDisplayTimeCheckbox"/>
+                    </StackPanel>
                 </Grid>
 
                 <Grid Margin="0,4,0,6">
@@ -424,6 +429,62 @@
                             <ComboBoxItem Content="Bottom Center"/>
                             <ComboBoxItem Content="Bottom Right"/>
                         </ComboBox>
+                    </StackPanel>
+                </Grid>
+
+                <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0"
+                                Margin="0,0,4,0">
+                        <TextBlock x:Name="VideoFileLabel"
+                                   Text="No video selected"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,0,4"
+                                   Foreground="Gray"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Button Grid.Column="0"
+                                    Content="Browse"
+                                    Margin="0,0,8,0"
+                                    Click="VideoBrowse_Click"/>
+                            <Button Grid.Column="1"
+                                    Content="Clear"
+                                    Click="VideoClear_Click"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1"
+                                Margin="4,0,4,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                            <TextBlock Text="Hide video when done" Margin="0,0,4,0"/>
+                            <TextBlock Text="&#xE9CE;"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       Foreground="Gray"
+                                       VerticalAlignment="Center">
+                                <TextBlock.ToolTip>
+                                    <ToolTip>
+                                        <TextBlock TextWrapping="Wrap" MaxWidth="400"
+                                                   Text="Whether to stop displaying the video when its runtime is over (if display time is greater than video length)"/>
+                                    </ToolTip>
+                                </TextBlock.ToolTip>
+                            </TextBlock>
+                        </StackPanel>
+                        <CheckBox x:Name="HideVideoCheckbox"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2"
+                                Margin="4,0,0,0">
+                        <TextBlock Text="Mute video" Margin="0,0,0,4"/>
+                        <CheckBox x:Name="MuteVideoCheckbox"/>
                     </StackPanel>
                 </Grid>
             </StackPanel>

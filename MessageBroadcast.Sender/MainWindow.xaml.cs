@@ -5,7 +5,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Printing;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -45,6 +44,9 @@ namespace MessageBroadcast.Sender
         private string? _selectedSoundFormat;
 
         private byte[]? _selectedImageData;
+
+        private byte[]? _selectedVideoData;
+        private string? _selectedVideoFormat;
 
         public MainWindow()
         {
@@ -236,6 +238,7 @@ namespace MessageBroadcast.Sender
             if (!string.IsNullOrEmpty(MessageInput.Text.Trim())) type |= MessageContentType.Text;
             if (_selectedImageData != null) type |= MessageContentType.Image;
             if (_selectedSoundData != null) type |= MessageContentType.Sound;
+            if (_selectedVideoData != null) type |= MessageContentType.Video;
 
             return type;
         }
@@ -336,20 +339,23 @@ namespace MessageBroadcast.Sender
 
         private async void SendButton_Click(object sender, RoutedEventArgs e)
         {
-            if (DeviceList.SelectedItem is not DeviceInfo target)
+            var target = DeviceList.SelectedItem as DeviceInfo;
+            var group = GroupsList.SelectedItem as GroupInfo;
+
+            if (target == null && group == null)
             {
-                MessageBox.Show("Please select a device first.");
+                MessageBox.Show("Please select a target first.");
                 return;
             }
 
-            if (target.Blocked)
+            if (target != null && target.Blocked)
             {
                 MessageBox.Show("You are unable to send messages to a user whom you've blocked.");
                 return;
             }
 
             var text = MessageInput.Text.Trim();
-            if (string.IsNullOrEmpty(text) && _selectedSoundData == null && _selectedImageData == null)
+            if (string.IsNullOrEmpty(text) && _selectedSoundData == null && _selectedImageData == null && _selectedVideoData == null)
             {
                 MessageBox.Show("Message must have some content.");
                 return;
@@ -368,20 +374,39 @@ namespace MessageBroadcast.Sender
                 FadeoutTimeSeconds = FadeoutTimeSlider.Value,
                 Position = (MessagePosition)PositionCombo.SelectedIndex,
                 ImagePosition = (MessagePosition)ImagePositionCombo.SelectedIndex,
-                AnchorTextToImage = AnchorTextCheckbox.IsChecked,
+                AnchorTextToImage = AnchorTextCheckbox.IsChecked ?? false,
                 FontFamily = selectedFont,
                 FontColor = selectedColor,
                 SoundData = _selectedSoundData,
                 SoundFormat = _selectedSoundFormat,
                 ImageData = _selectedImageData,
+                VideoData = _selectedVideoData,
+                HideVideoWhenDone = HideVideoCheckbox.IsChecked ?? false,
+                UseVideoLengthAsDisplayTime = VideoLengthAsDisplayTimeCheckbox.IsChecked ?? false,
+                MuteVideo = MuteVideoCheckbox.IsChecked ?? false,
+                VideoFormat = _selectedVideoFormat,
                 ContentType = GetMessageType()
             };
 
-            var success = await _sender.SendMessageAsync(target, message);
-            if (success)
-                MessageInput.Text = string.Empty;
+            if (group != null)
+            {
+                foreach (var dvc in group.GroupMembers)
+                {
+                    var success = await _sender.SendMessageAsync(dvc, message);
+                    if (success)
+                        MessageInput.Text = string.Empty;
+                    else
+                        MessageBox.Show($"Failed to send to {dvc.PreferredName}. For some reason");
+                }
+            }
             else
-                MessageBox.Show($"Failed to send to {target.PreferredName}. They may have gone offline.");
+            {
+                var success = await _sender.SendMessageAsync(target!, message);
+                if (success)
+                    MessageInput.Text = string.Empty;
+                else
+                    MessageBox.Show($"Failed to send to {target!.PreferredName}. They may have gone offline.");
+            }
         }
 
         private void MessageInput_KeyDown(object sender, KeyEventArgs e)
@@ -521,7 +546,7 @@ namespace MessageBroadcast.Sender
             var dialog = new Microsoft.Win32.OpenFileDialog
             {
                 Filter = "Image Files|*.jpg;*.jpeg;*.jfif;*.png;*.gif;*.webp|All Files|*.*",
-                Title = "Select a sound file"
+                Title = "Select an image file"
             };
 
             if (dialog.ShowDialog() != true) return;
@@ -535,6 +560,35 @@ namespace MessageBroadcast.Sender
 
             _selectedImageData = File.ReadAllBytes(dialog.FileName);
             ImageFileLabel.Text = Path.GetFileName(dialog.FileName);
+        }
+
+        private void VideoBrowse_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Image Files|*.mp4;*.mov;*.mkv;*.|All Files|*.*",
+                Title = "Select a video file"
+            };
+
+            if (dialog.ShowDialog() != true) return;
+
+            var fileInfo = new FileInfo(dialog.FileName);
+            if (fileInfo.Length > Message.MaxLength)
+            {
+                MessageBox.Show($"Video file must be under {Message.MaxLength}MB.");
+                return;
+            }
+
+            _selectedVideoData = File.ReadAllBytes(dialog.FileName);
+            _selectedVideoFormat = Path.GetExtension(dialog.FileName);
+            VideoFileLabel.Text = Path.GetFileName(dialog.FileName);
+        }
+
+        private void VideoClear_Click(object sender, RoutedEventArgs e)
+        {
+            _selectedVideoData = null;
+            _selectedVideoFormat = null;
+            VideoFileLabel.Text = "No video selected";
         }
 
         private void ImageClear_Click(object sender, RoutedEventArgs e)
